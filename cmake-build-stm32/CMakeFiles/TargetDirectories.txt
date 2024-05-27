@@ -1,0 +1,3 @@
+C:/Users/floro/STM32CubeIDE/workspace_1.11.2/Tennismaschine/cmake-build-stm32/CMakeFiles/Tennismaschine.elf.dir
+C:/Users/floro/STM32CubeIDE/workspace_1.11.2/Tennismaschine/cmake-build-stm32/CMakeFiles/edit_cache.dir
+C:/Users/floro/STM32CubeIDE/workspace_1.11.2/Tennismaschine/cmake-build-stm32/CMakeFiles/rebuild_cache.dir

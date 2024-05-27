@@ -1,0 +1,5 @@
+../Core/Src/machine_programs.c:19:5:home_pos_drive	4	static
+../Core/Src/machine_programs.c:24:6:pgm_stop	8	static
+../Core/Src/machine_programs.c:33:6:pgm_manual	24	static
+../Core/Src/machine_programs.c:58:6:pgm_auto_speed	4	static
+../Core/Src/machine_programs.c:64:6:pgm_auto	4	static
