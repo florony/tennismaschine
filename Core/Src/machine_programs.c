@@ -4,65 +4,133 @@
  *  Created on: May 16, 2024
  *      Author: floro
  */
+#include "main_drv_control.h"
 #include "machine_programs.h"
+#include "pos_drv_control.h"
 #include "main.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-static TIM_HandleTypeDef htim1;
-static ADC_HandleTypeDef hadc1;
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
+extern ADC_HandleTypeDef hadc1;
+extern FlagStatus mainDrvRunning;
 
-volatile uint16_t adc_result[3];
-uint8_t adc_conv_complete_flag = 0;
+static uint16_t adc_result[3];
+static uint16_t speed_percent;
+static int16_t spin_percent;
+static uint16_t angle_degree;
+static uint16_t last_adc[3];
+static uint32_t last_rand_tick;
+static uint32_t last_blink_tick;
 
-int home_pos_drive(void){
-	//TODO Homing the Position drive
+int pgm_stop(void){
+
+	if(mainDrvRunning){
+
+		HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+		HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+
+		mainDrvRunning = RESET;
+	}
+
+	if((HAL_GetTick() - last_blink_tick) > BLINK_INT_MS){
+
+			Toggle_Led_Output(GREEN);
+
+			last_blink_tick = HAL_GetTick();
+		}
+
 	return EXIT_SUCCESS;
 }
 
-void pgm_stop(void){
+int pgm_manual(void){
 
-	htim1.Instance = TIM1;
-	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+	Set_Led_Output(GREEN);
 
-	return;
-}
+	get_adc_values(adc_result);
 
-void pgm_manual(void){
+	speed_percent = adc_result[0]*100/0xFFF;
+	spin_percent = (adc_result[1]*100/0xFFF)-50;
+	angle_degree = (adc_result[2]*90/0xFFF);
 
-	hadc1.Instance = ADC1;
-	for(int i = 0; i < 3; i++){
-		printf("Start\n");
-		HAL_ADC_Start(&hadc1);
-		HAL_ADC_PollForConversion(&hadc1, 1);
-		adc_result[i] = HAL_ADC_GetValue(&hadc1);
+	if(
+		(abs(last_adc[0] - adc_result[0]) > MIN_SPEED_DELTA) |
+		(abs(last_adc[1] - adc_result[1]) > MIN_SPEED_DELTA)){
+
+			last_adc[0] = adc_result[0];
+			last_adc[1] = adc_result[1];
+			set_pwm_maindrv(speed_percent, spin_percent, htim1);
+		}
+
+	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
+		last_adc[2] = adc_result[2];
+		set_pos_posdrv(angle_degree);
 	}
 
-	uint16_t speed = adc_result[0];
-	uint16_t spin = adc_result[1];
-	uint16_t angle = adc_result[2];
+	if(!mainDrvRunning){
+		HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+		HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
 
-	printf("speed: %d \n", speed);
-	printf("spin: %d \n", spin);
-	printf("angle: %d \n", angle);
+		mainDrvRunning = SET;
+	}
 
-	htim1.Instance = TIM1;
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-
-	return;
+	return EXIT_SUCCESS;
 }
 
-void pgm_auto_speed(void){
-	//TODO: generate random values for speed, set outputs
+int pgm_auto_speed(void){
 
-	return;
+	Set_Led_Output(GREEN);
+
+	get_adc_values(adc_result);
+
+	angle_degree = (adc_result[2]*90/0xFFF);
+
+	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
+		last_adc[2] = adc_result[2];
+		set_pos_posdrv(angle_degree);
+	}
+
+	if((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000){
+
+			uint16_t rand_speed = rand() % 101;
+			int16_t rand_spin = (rand() % 101) -50;
+
+			set_pwm_maindrv(rand_speed, rand_spin, htim1);
+
+			last_rand_tick = HAL_GetTick();
+		}
+
+	return EXIT_SUCCESS;
 }
 
-void pgm_auto(void){
-	//TODO: generate random values for all, set outputs
+int pgm_auto(void){
 
-	return;
+	Set_Led_Output(GREEN);
+
+	if((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000){
+
+		uint16_t rand_speed = rand() % 101;
+		int16_t rand_spin = (rand() % 101) -50;
+		uint16_t rand_angle = rand() % 91;
+
+		set_pwm_maindrv(rand_speed, rand_spin, htim1);
+		set_pos_posdrv(rand_angle);
+
+		last_rand_tick = HAL_GetTick();
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int get_adc_values(uint16_t* adc_result){
+
+	for(int i = 0; i < 3; i++){
+			HAL_ADC_Start(&hadc1);
+			HAL_ADC_PollForConversion(&hadc1, 1);
+			adc_result[i] = HAL_ADC_GetValue(&hadc1);
+		}
+
+	return EXIT_SUCCESS;
 }

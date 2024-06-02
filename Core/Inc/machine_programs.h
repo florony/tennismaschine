@@ -10,12 +10,14 @@
 
 int home_pos_drive(void);
 
-void pgm_stop(void);
+int pgm_stop(void);
 
-void pgm_manual(void);
+int pgm_manual(void);
 
-void pgm_auto_speed(void);
+int pgm_auto_speed(void);
 
-void pgm_auto(void);
+int pgm_auto(void);
+
+int get_adc_values(uint16_t*);
 
 #endif /* INC_MACHINE_PROGRAMS_H_ */

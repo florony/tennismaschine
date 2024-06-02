@@ -24,3 +24,8 @@
 1660	2637	7385400468073702	CMakeFiles/Tennismaschine.elf.dir/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_i2c.c.obj	6c5ad797e878dc53
 2016	2865	7385400470365788	CMakeFiles/Tennismaschine.elf.dir/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim.c.obj	dac90e729f9a6148
 2866	3799	7385400476226714	Tennismaschine.elf	5ac9321211cfaecd
+14	3076	7385898309689758	CMakeFiles/Tennismaschine.elf.dir/Core/Src/main.c.obj	69cf84367e14bbad
+3079	5187	7385898324329243	Tennismaschine.elf	5ac9321211cfaecd
+81	670	7385928754261982	CMakeFiles/Tennismaschine.elf.dir/Core/Src/machine_programs.c.obj	22bd6e0de04ccebc
+5	693	7385928754326968	CMakeFiles/Tennismaschine.elf.dir/Core/Src/main.c.obj	69cf84367e14bbad
+694	1775	7385928761019800	Tennismaschine.elf	5ac9321211cfaecd

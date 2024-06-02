@@ -1,0 +1,2 @@
+../Core/Src/pos_drv_control.c:18:5:set_pos_posdrv	16	static
+../Core/Src/pos_drv_control.c:42:5:home_pos_drive	8	static

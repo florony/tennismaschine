@@ -55,6 +55,8 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+int Set_Led_Output(uint8_t);
+int Toggle_Led_Output(uint8_t);
 
 /* USER CODE END EFP */
 
@@ -65,8 +67,6 @@ void Error_Handler(void);
 #define SPIN_GPIO_Port GPIOC
 #define ANGLE_Pin GPIO_PIN_2
 #define ANGLE_GPIO_Port GPIOC
-#define POS_PULSE_Pin GPIO_PIN_1
-#define POS_PULSE_GPIO_Port GPIOA
 #define SW_1_Pin GPIO_PIN_4
 #define SW_1_GPIO_Port GPIOA
 #define LED_RED_Pin GPIO_PIN_7
@@ -99,10 +99,32 @@ void Error_Handler(void);
 #define POS_DIR_GPIO_Port GPIOB
 #define TDRV_DIR_Pin GPIO_PIN_8
 #define TDRV_DIR_GPIO_Port GPIOB
-#define Input_2_Pin GPIO_PIN_9
-#define Input_2_GPIO_Port GPIOB
+#define E_STOP_Pin GPIO_PIN_9
+#define E_STOP_GPIO_Port GPIOB
+#define E_STOP_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
+#define ADC_BASE_REG 0x40012400
+#define ADC_CR2_REG (*(volatile uint32_t*) (ADC_BASE_REG + 0x08))
+
+#define RED ((uint8_t) 1 << 2)
+#define YELLOW ((uint8_t) 1 << 1)
+#define GREEN ((uint8_t) 1 << 0)
+#define OFF ((uint8_t) 0)
+#define BLINK_INT_MS 1000
+
+#define SPIN_FACTOR 100 // NOT YET IN USE
+#define STEPS_PER_DEGREE 10
+#define POS_DRV_DIR_POLARITY 0
+#define POS_DRV_SLOW_FREQ 2
+#define POS_DRV_FAST_FREQ 10
+#define POS_DRV_PERIOD(f, presc, clk) (clk/presc/f)
+#define MIN_ANGLE_DELTA 50
+#define MIN_SPEED_DELTA 50
+#define MAIN_DRV_DIR_POLARITY 0
+#define MAIN_DRV_MIN_DUTY 10
+#define MAIN_DRV_MAX_DUTY 90
+#define AUTO_DELAY 10
 
 /* USER CODE END Private defines */
 
