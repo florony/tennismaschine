@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "machine_programs.h"
 #include "pos_drv_control.h"
+#include "ht16k33.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -61,6 +62,7 @@ uint16_t targetPos = 0;
 FlagStatus mainDrvRunning = RESET;
 FlagStatus homingComplete = RESET;
 FlagStatus eStop = SET;
+FlagStatus posDrvRunning = RESET;
 
 /* USER CODE END PV */
 
@@ -145,6 +147,15 @@ int main(void)
 	if(homingComplete == RESET){
 		home_pos_drive();
 		Set_Led_Output(GREEN);
+	}
+
+	if((HAL_GetTick() - last_angle_change > BLINK_DISP_DELAY) & posDrvRunning){
+		seg7_setDispAddr(ANGLE);
+		seg7_setBlinkRate(2);
+	} else
+	{
+		seg7_setDispAddr(ANGLE);
+		seg7_setBlinkRate(0);
 	}
 
 	pgm_state = 0;
@@ -553,6 +564,7 @@ void POS_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 
 	if((actualPos == targetPos) | eStop){
 		HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_2);
+		posDrvRunning = RESET;
 	}
 }
 
@@ -585,6 +597,12 @@ int E_Stop_Call(void){
 
 	Set_Led_Output(RED);
 	homingComplete = RESET;
+
+	uint8_t text_fail[] = {SEG7_F, SEG7_A, SEG7_I, SEG7_L};
+
+	seg7_displayOnOffMulti(SPIN | ANGLE, 0);
+	seg7_displayOnOffMulti(SPEED, 1);
+	seg7_display(text_fail);
 
 	while(eStop){
 			eStop = HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin);

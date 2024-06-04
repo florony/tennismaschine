@@ -14,6 +14,7 @@ extern uint16_t targetPos;
 extern int8_t posDrvDir;
 extern TIM_HandleTypeDef htim2;
 extern FlagStatus homingComplete;
+extern FlagStatus posDrvRunning;
 
 int set_pos_posdrv(uint16_t angle_degree){
 
@@ -35,6 +36,7 @@ int set_pos_posdrv(uint16_t angle_degree){
 	}
 
 	HAL_TIM_PWM_Start_IT(&htim2, TIM_CHANNEL_2);
+	posDrvRunning = SET;
 
 	return EXIT_SUCCESS;
 }

@@ -8,6 +8,8 @@
 #ifndef INC_MACHINE_PROGRAMS_H_
 #define INC_MACHINE_PROGRAMS_H_
 
+extern uint32_t last_angle_change;
+
 int home_pos_drive(void);
 
 int pgm_stop(void);

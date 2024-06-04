@@ -3,6 +3,8 @@
  *
  *  Created on: May 18, 2022
  *  Author: Lennart Koepper
+ *  Modified: 04.06.2024
+ *  Modified: Florian Ronacher
  */
 
 #ifndef INC_HT16K33_H_
@@ -15,9 +17,9 @@ extern I2C_HandleTypeDef hi2c2;
 
 // !!! I2C Configuration !!!
 #define HT16K33_I2C_PORT  hi2c2
-#define SPEED_DISP        0x70
-#define SPIN_DISP        0x71
-#define ANGLE_DISP        0x72
+#define SPEED_ADDR        0x70
+#define SPIN_ADDR        0x71
+#define ANGLE_ADDR        0x72
 
 #define SPEED (uint8_t)(0x1 << 0)
 #define SPIN (uint8_t)(0x1 << 1)
@@ -69,6 +71,6 @@ void seg7_displayRaw(uint8_t *array, int colon);  		// control the 4 Characters 
 void seg7_setDispAddr(uint16_t disp_addr);
 
 void seg7_displayOnOffMulti(uint8_t display, uint8_t state);
-void seg7_displayIntMulti(int16_t*);
+void seg7_displayIntMulti(uint16_t speed, int16_t spin, uint16_t angle);
 
 #endif /* INC_HT16K33_H_ */

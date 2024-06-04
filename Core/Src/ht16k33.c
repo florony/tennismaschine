@@ -267,28 +267,28 @@ void seg7_setDispAddr(uint16_t disp_addr){
 
 void seg7_displayOnOffMulti(uint8_t display, uint8_t state){
 	if(display & SPEED){
-		seg7_setDispAddr(SPEED_DISP);
+		seg7_setDispAddr(SPEED_ADDR);
 		state ? seg7_displayOn() : seg7_displayOff();
 	}
 
 	if(display & SPIN){
-		seg7_setDispAddr(SPIN_DISP);
+		seg7_setDispAddr(SPIN_ADDR);
 		state ? seg7_displayOn() : seg7_displayOff();
 	}
 
 	if(display & ANGLE){
-		seg7_setDispAddr(ANGLE_DISP);
+		seg7_setDispAddr(ANGLE_ADDR);
 		state ? seg7_displayOn() : seg7_displayOff();
 	}
 }
 
-void seg7_displayIntMulti(int16_t* numbers){
-	seg7_setDispAddr(SPEED_DISP);
-	seg7_displayInt((int) numbers[0]);
-	seg7_setDispAddr(SPIN_DISP);
-	seg7_displayInt((int) numbers[1]);
-	seg7_setDispAddr(ANGLE_DISP);
-	seg7_displayInt((int) numbers[2]);
+void seg7_displayIntMulti(uint16_t speed, int16_t spin, uint16_t angle){
+	seg7_setDispAddr(SPEED_ADDR);
+	seg7_displayInt((int) speed);
+	seg7_setDispAddr(SPIN_ADDR);
+	seg7_displayInt((int) spin);
+	seg7_setDispAddr(ANGLE_ADDR);
+	seg7_displayInt((int) angle);
 }
 
 //##### END: DISPLAY-FUNCTIONS #####

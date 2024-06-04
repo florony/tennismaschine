@@ -112,6 +112,7 @@ int Toggle_Led_Output(uint8_t);
 #define GREEN ((uint8_t) 1 << 0)
 #define OFF ((uint8_t) 0)
 #define BLINK_INT_MS 1000
+#define BLINK_DISP_DELAY 2000
 
 #define SPIN_FACTOR 100 // NOT YET IN USE
 #define STEPS_PER_DEGREE 10

@@ -28,7 +28,7 @@ Core/Src/machine_programs.o: ../Core/Src/machine_programs.c \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h \
  ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h \
  ../Core/Inc/machine_programs.h ../Core/Inc/pos_drv_control.h \
- ../Core/Inc/main.h
+ ../Core/Inc/main.h ../Core/Inc/ht16k33.h
 ../Core/Inc/main_drv_control.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:
@@ -61,3 +61,4 @@ Core/Src/machine_programs.o: ../Core/Src/machine_programs.c \
 ../Core/Inc/machine_programs.h:
 ../Core/Inc/pos_drv_control.h:
 ../Core/Inc/main.h:
+../Core/Inc/ht16k33.h:
