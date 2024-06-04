@@ -5,6 +5,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Core/Src/ht16k33.c \
 ../Core/Src/machine_programs.c \
 ../Core/Src/main.c \
 ../Core/Src/main_drv_control.c \
@@ -16,6 +17,7 @@ C_SRCS += \
 ../Core/Src/system_stm32f1xx.c 
 
 OBJS += \
+./Core/Src/ht16k33.o \
 ./Core/Src/machine_programs.o \
 ./Core/Src/main.o \
 ./Core/Src/main_drv_control.o \
@@ -27,6 +29,7 @@ OBJS += \
 ./Core/Src/system_stm32f1xx.o 
 
 C_DEPS += \
+./Core/Src/ht16k33.d \
 ./Core/Src/machine_programs.d \
 ./Core/Src/main.d \
 ./Core/Src/main_drv_control.d \
@@ -45,7 +48,7 @@ Core/Src/%.o Core/Src/%.su: ../Core/Src/%.c Core/Src/subdir.mk
 clean: clean-Core-2f-Src
 
 clean-Core-2f-Src:
-	-$(RM) ./Core/Src/machine_programs.d ./Core/Src/machine_programs.o ./Core/Src/machine_programs.su ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/main_drv_control.d ./Core/Src/main_drv_control.o ./Core/Src/main_drv_control.su ./Core/Src/pos_drv_control.d ./Core/Src/pos_drv_control.o ./Core/Src/pos_drv_control.su ./Core/Src/stm32f1xx_hal_msp.d ./Core/Src/stm32f1xx_hal_msp.o ./Core/Src/stm32f1xx_hal_msp.su ./Core/Src/stm32f1xx_it.d ./Core/Src/stm32f1xx_it.o ./Core/Src/stm32f1xx_it.su ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32f1xx.d ./Core/Src/system_stm32f1xx.o ./Core/Src/system_stm32f1xx.su
+	-$(RM) ./Core/Src/ht16k33.d ./Core/Src/ht16k33.o ./Core/Src/ht16k33.su ./Core/Src/machine_programs.d ./Core/Src/machine_programs.o ./Core/Src/machine_programs.su ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/main_drv_control.d ./Core/Src/main_drv_control.o ./Core/Src/main_drv_control.su ./Core/Src/pos_drv_control.d ./Core/Src/pos_drv_control.o ./Core/Src/pos_drv_control.su ./Core/Src/stm32f1xx_hal_msp.d ./Core/Src/stm32f1xx_hal_msp.o ./Core/Src/stm32f1xx_hal_msp.su ./Core/Src/stm32f1xx_it.d ./Core/Src/stm32f1xx_it.o ./Core/Src/stm32f1xx_it.su ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32f1xx.d ./Core/Src/system_stm32f1xx.o ./Core/Src/system_stm32f1xx.su
 
 .PHONY: clean-Core-2f-Src
 
