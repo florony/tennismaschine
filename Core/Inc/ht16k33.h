@@ -9,15 +9,19 @@
 #define INC_HT16K33_H_
 
 #include "stdint.h"
+#include "main.h"
 
-// !!! Adjust the following include according to your stm32 !!!
-#include "stm32g4xx_hal.h" 
-
-extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c2;
 
 // !!! I2C Configuration !!!
-#define HT16K33_I2C_PORT        hi2c1
-#define HT16K33_I2C_ADDR        0x70
+#define HT16K33_I2C_PORT  hi2c2
+#define SPEED_DISP        0x70
+#define SPIN_DISP        0x71
+#define ANGLE_DISP        0x72
+
+#define SPEED (uint8_t)(0x1 << 0)
+#define SPIN (uint8_t)(0x1 << 1)
+#define ANGLE (uint8_t)(0x1 << 2)
 
 // displayable Characters
 #define SEG7_0                0
@@ -62,5 +66,10 @@ void seg7_display(uint8_t *array);                  	// displays 4 displayable C
 void seg7_displayPoint(uint8_t *array, uint8_t point);  // displays 4 displayable Character values (stored in array), point = digit with . (0..3)
 void seg7_displayColon(uint8_t on);                 	// 0 = off
 void seg7_displayRaw(uint8_t *array, int colon);  		// control the 4 Characters and the colon
+void seg7_setDispAddr(uint16_t disp_addr);
+
+void seg7_displayOffMulti(uint8_t display);
+void seg7_displayOnMulti(uint8_t display);
+void seg7_displayIntMulti(int16_t*);
 
 #endif /* INC_HT16K33_H_ */

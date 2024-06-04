@@ -61,6 +61,8 @@ volatile uint8_t _displayCache[5];   	//cache for performance
 volatile uint8_t _digits = 4;			//number of digits to display (0-4)
 volatile uint8_t _bright = 15;			//current brightness (0-15)
 
+uint16_t disp_addr;
+
 //##### BEGIN: I2C-WRITE-FUNCTIONS (PRIVATE) #####
 // sends complete cached data per i2c
 void _refresh() {
@@ -70,13 +72,13 @@ void _refresh() {
 		pData[0] = pos * 2;
 		pData[1] = _displayCache[pos];
 
-		HAL_I2C_Master_Transmit(&HT16K33_I2C_PORT, HT16K33_I2C_ADDR << 1, pData,2, HAL_MAX_DELAY);
+		HAL_I2C_Master_Transmit(&HT16K33_I2C_PORT, disp_addr << 1, pData,2, HAL_MAX_DELAY);
 	}
 }
 
 // sends given command per i2c
 void _writeCmd(uint8_t cmd) {
-	HAL_I2C_Master_Transmit(&HT16K33_I2C_PORT, HT16K33_I2C_ADDR << 1, &cmd, 1, HAL_MAX_DELAY);
+	HAL_I2C_Master_Transmit(&HT16K33_I2C_PORT, disp_addr << 1, &cmd, 1, HAL_MAX_DELAY);
 }
 
 // sends value (mask) for specific position per i2c, if different from cached value
@@ -88,7 +90,7 @@ void _writePos(uint8_t pos, uint8_t mask) {
 	pData[0] = pos * 2;
 	pData[1] = mask;
 
-	HAL_I2C_Master_Transmit(&HT16K33_I2C_PORT, HT16K33_I2C_ADDR << 1, pData, 2, HAL_MAX_DELAY);
+	HAL_I2C_Master_Transmit(&HT16K33_I2C_PORT, disp_addr << 1, pData, 2, HAL_MAX_DELAY);
 	_displayCache[pos] = mask;	// update value in cache
 }
 
@@ -257,6 +259,25 @@ void seg7_displayRaw(uint8_t *array, int colon) {
 	_writePos(3, array[2]);
 	_writePos(4, array[3]);
 	_writePos(2, colon ? 255 : 0);
+}
+
+void seg7_setDispAddr(uint16_t disp_addr){
+	disp_addr = disp_addr;
+}
+
+void seg7_displayOffMulti(uint8_t display){
+	if(display & SPEED){
+		seg7_setDispAddr(SPEED_DISP);
+		seg7_displayOff();
+	}
+}
+
+void seg7_displayOnMulti(uint8_t display){
+
+}
+
+void seg7_displayIntMulti(int16_t* numbers){
+
 }
 
 //##### END: DISPLAY-FUNCTIONS #####
