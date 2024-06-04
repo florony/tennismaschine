@@ -192,17 +192,15 @@ Discarded input sections
                 0x0000000000000000       0x5c ./Core/Src/ht16k33.o
  .text.seg7_setDispAddr
                 0x0000000000000000       0x14 ./Core/Src/ht16k33.o
- .text.seg7_displayOffMulti
-                0x0000000000000000       0x26 ./Core/Src/ht16k33.o
- .text.seg7_displayOnMulti
-                0x0000000000000000       0x14 ./Core/Src/ht16k33.o
+ .text.seg7_displayOnOffMulti
+                0x0000000000000000       0x78 ./Core/Src/ht16k33.o
  .text.seg7_displayIntMulti
-                0x0000000000000000       0x12 ./Core/Src/ht16k33.o
- .debug_info    0x0000000000000000      0xb4a ./Core/Src/ht16k33.o
+                0x0000000000000000       0x4a ./Core/Src/ht16k33.o
+ .debug_info    0x0000000000000000      0xb32 ./Core/Src/ht16k33.o
  .debug_abbrev  0x0000000000000000      0x264 ./Core/Src/ht16k33.o
  .debug_aranges
-                0x0000000000000000       0xd8 ./Core/Src/ht16k33.o
- .debug_ranges  0x0000000000000000       0xc8 ./Core/Src/ht16k33.o
+                0x0000000000000000       0xd0 ./Core/Src/ht16k33.o
+ .debug_ranges  0x0000000000000000       0xc0 ./Core/Src/ht16k33.o
  .debug_macro   0x0000000000000000      0x20b ./Core/Src/ht16k33.o
  .debug_macro   0x0000000000000000      0xa6c ./Core/Src/ht16k33.o
  .debug_macro   0x0000000000000000       0x22 ./Core/Src/ht16k33.o
@@ -244,10 +242,10 @@ Discarded input sections
  .debug_macro   0x0000000000000000       0x83 ./Core/Src/ht16k33.o
  .debug_macro   0x0000000000000000      0x16c ./Core/Src/ht16k33.o
  .debug_macro   0x0000000000000000       0xac ./Core/Src/ht16k33.o
- .debug_line    0x0000000000000000      0xb33 ./Core/Src/ht16k33.o
- .debug_str     0x0000000000000000    0x88c2c ./Core/Src/ht16k33.o
+ .debug_line    0x0000000000000000      0xb80 ./Core/Src/ht16k33.o
+ .debug_str     0x0000000000000000    0x88c20 ./Core/Src/ht16k33.o
  .comment       0x0000000000000000       0x51 ./Core/Src/ht16k33.o
- .debug_frame   0x0000000000000000      0x35c ./Core/Src/ht16k33.o
+ .debug_frame   0x0000000000000000      0x330 ./Core/Src/ht16k33.o
  .ARM.attributes
                 0x0000000000000000       0x2d ./Core/Src/ht16k33.o
  .group         0x0000000000000000        0xc ./Core/Src/machine_programs.o

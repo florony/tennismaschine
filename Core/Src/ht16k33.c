@@ -265,19 +265,30 @@ void seg7_setDispAddr(uint16_t disp_addr){
 	disp_addr = disp_addr;
 }
 
-void seg7_displayOffMulti(uint8_t display){
+void seg7_displayOnOffMulti(uint8_t display, uint8_t state){
 	if(display & SPEED){
 		seg7_setDispAddr(SPEED_DISP);
-		seg7_displayOff();
+		state ? seg7_displayOn() : seg7_displayOff();
+	}
+
+	if(display & SPIN){
+		seg7_setDispAddr(SPIN_DISP);
+		state ? seg7_displayOn() : seg7_displayOff();
+	}
+
+	if(display & ANGLE){
+		seg7_setDispAddr(ANGLE_DISP);
+		state ? seg7_displayOn() : seg7_displayOff();
 	}
 }
 
-void seg7_displayOnMulti(uint8_t display){
-
-}
-
 void seg7_displayIntMulti(int16_t* numbers){
-
+	seg7_setDispAddr(SPEED_DISP);
+	seg7_displayInt((int) numbers[0]);
+	seg7_setDispAddr(SPIN_DISP);
+	seg7_displayInt((int) numbers[1]);
+	seg7_setDispAddr(ANGLE_DISP);
+	seg7_displayInt((int) numbers[2]);
 }
 
 //##### END: DISPLAY-FUNCTIONS #####

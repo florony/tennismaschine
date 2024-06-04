@@ -68,8 +68,7 @@ void seg7_displayColon(uint8_t on);                 	// 0 = off
 void seg7_displayRaw(uint8_t *array, int colon);  		// control the 4 Characters and the colon
 void seg7_setDispAddr(uint16_t disp_addr);
 
-void seg7_displayOffMulti(uint8_t display);
-void seg7_displayOnMulti(uint8_t display);
+void seg7_displayOnOffMulti(uint8_t display, uint8_t state);
 void seg7_displayIntMulti(int16_t*);
 
 #endif /* INC_HT16K33_H_ */

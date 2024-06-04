@@ -19,6 +19,5 @@
 ../Core/Src/ht16k33.c:252:6:seg7_displayColon	16	static
 ../Core/Src/ht16k33.c:256:6:seg7_displayRaw	16	static
 ../Core/Src/ht16k33.c:264:6:seg7_setDispAddr	16	static
-../Core/Src/ht16k33.c:268:6:seg7_displayOffMulti	16	static
-../Core/Src/ht16k33.c:275:6:seg7_displayOnMulti	16	static
-../Core/Src/ht16k33.c:279:6:seg7_displayIntMulti	16	static
+../Core/Src/ht16k33.c:268:6:seg7_displayOnOffMulti	16	static
+../Core/Src/ht16k33.c:285:6:seg7_displayIntMulti	16	static
