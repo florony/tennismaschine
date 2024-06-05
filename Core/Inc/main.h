@@ -36,6 +36,17 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
+extern ADC_HandleTypeDef hadc1;
+extern FlagStatus mainDrvRunning;
+extern I2C_HandleTypeDef hi2c2;
+extern uint16_t actualPos;
+extern uint16_t targetPos;
+extern int8_t posDrvDir;
+extern TIM_HandleTypeDef htim2;
+extern FlagStatus homingComplete;
+extern FlagStatus posDrvRunning;
 
 /* USER CODE END ET */
 

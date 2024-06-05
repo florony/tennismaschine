@@ -598,11 +598,11 @@ int E_Stop_Call(void){
 	Set_Led_Output(RED);
 	homingComplete = RESET;
 
-	uint8_t text_fail[] = {SEG7_F, SEG7_A, SEG7_I, SEG7_L};
+	uint8_t text_stop[] = {SEG7_5, SEG7_T, SEG7_0, SEG7_P};
 
 	seg7_displayOnOffMulti(SPIN | ANGLE, 0);
 	seg7_displayOnOffMulti(SPEED, 1);
-	seg7_display(text_fail);
+	seg7_display(text_stop);
 
 	while(eStop){
 			eStop = HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin);
@@ -627,6 +627,7 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+	  Set_Led_Output(RED | YELLOW);
   }
   /* USER CODE END Error_Handler_Debug */
 }

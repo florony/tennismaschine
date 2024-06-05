@@ -13,11 +13,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim2;
-extern ADC_HandleTypeDef hadc1;
-extern FlagStatus mainDrvRunning;
-
 static uint16_t adc_result[3];
 static uint16_t speed_percent;
 static int16_t spin_percent;

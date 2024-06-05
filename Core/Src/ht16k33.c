@@ -55,6 +55,8 @@ const uint8_t charmap[] = {
 		0x40,   // minus
 		0x30,   // I
 		0x38,   // L
+		0x31,	// T
+		0x73,	// P
 };
 
 volatile uint8_t _displayCache[5];   	//cache for performance

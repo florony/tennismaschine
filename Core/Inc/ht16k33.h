@@ -13,8 +13,6 @@
 #include "stdint.h"
 #include "main.h"
 
-extern I2C_HandleTypeDef hi2c2;
-
 // !!! I2C Configuration !!!
 #define HT16K33_I2C_PORT  hi2c2
 #define SPEED_ADDR        0x70
@@ -46,6 +44,8 @@ extern I2C_HandleTypeDef hi2c2;
 #define SEG7_MINUS            17
 #define SEG7_I                18		// I & L, e.g. to write "FAIL"
 #define SEG7_L                19
+#define SEG7_T				  20
+#define SEG7_P				  21
 #define SEG7_NONE             99
 
 void seg7_init(void);		// initializes 7-segment-display

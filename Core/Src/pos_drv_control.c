@@ -9,13 +9,6 @@
 #include <stdlib.h>
 #include "main.h"
 
-extern uint16_t actualPos;
-extern uint16_t targetPos;
-extern int8_t posDrvDir;
-extern TIM_HandleTypeDef htim2;
-extern FlagStatus homingComplete;
-extern FlagStatus posDrvRunning;
-
 int set_pos_posdrv(uint16_t angle_degree){
 
 	/*Set PWM frequency to fast for positioning*/
