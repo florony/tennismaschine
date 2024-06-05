@@ -47,22 +47,20 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
-
 I2C_HandleTypeDef hi2c2;
-
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
 
-int8_t posDrvDir = 0;
-uint16_t actualPos = 0;
-uint16_t targetPos = 0;
+int8_t posDrvDir = 0;	//-1 toward homing pos, 1 toward end pos
+uint16_t actualPos = 0;	//Actual position of stepper drive in steps
+uint16_t targetPos = 0;	//Target position of stepper drive in steps
 
-FlagStatus mainDrvRunning = RESET;
-FlagStatus homingComplete = RESET;
-FlagStatus eStop = SET;
-FlagStatus posDrvRunning = RESET;
+FlagStatus mainDrvRunning = RESET;	//State of both main drives
+FlagStatus homingComplete = RESET;	//Reset if homing is needed
+FlagStatus eStop = SET;				//State of emergency stop
+FlagStatus posDrvRunning = RESET;	//State of steper drive
 
 /* USER CODE END PV */
 
@@ -108,13 +106,13 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  ADC_CR2_REG |= (1<<2);
+  ADC_CR2_REG |= (1<<2); //Start calibration of ADCs after power on
 
   while(ADC_CR2_REG & (1<<2)){
 	  //Wait for ADC calibration finished
   }
 
-  eStop = HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin);
+  eStop = HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin); //Get initial state of emergency stop
 
   /* USER CODE END SysInit */
 
@@ -127,6 +125,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_RegisterCallback(&htim2, HAL_TIM_PWM_PULSE_FINISHED_CB_ID, POS_PulseFinishedCallback);
+
+  //Set position signal of main drives
   HAL_GPIO_WritePin(TDRV_DIR_GPIO_Port, TDRV_DIR_Pin, MAIN_DRV_DIR_POLARITY ? GPIO_PIN_SET : GPIO_PIN_RESET);
   HAL_GPIO_WritePin(BDRV_DIR_GPIO_Port, BDRV_DIR_Pin, MAIN_DRV_DIR_POLARITY ? GPIO_PIN_RESET : GPIO_PIN_SET);
 
@@ -134,7 +134,7 @@ int main(void)
 
   uint8_t pgm_state = 0;
 
-  srand(time(NULL));
+  srand(time(NULL)); //Seed the random int generator for auto programms
 
   /* USER CODE END 2 */
 
@@ -142,13 +142,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	if(eStop) E_Stop_Call();
+	if(eStop) E_Stop_Call(); //Call emergency stop routine
 
 	if(homingComplete == RESET){
 		home_pos_drive();
 		Set_Led_Output(GREEN);
 	}
 
+	/*This if switches the angle display blinking on if the stepper drive is on and
+	* and the last change is longer ago then BLINK_DISP_DELAY*/
 	if((HAL_GetTick() - last_angle_change > BLINK_DISP_DELAY) & posDrvRunning){
 		seg7_setDispAddr(ANGLE);
 		seg7_setBlinkRate(2);
@@ -160,6 +162,9 @@ int main(void)
 
 	pgm_state = 0;
 
+	/*The mode switch is read as bitpattern PGM_1_Pin = LSB PGM_3_Pin = MSB
+	 *if pattern is not valid, machine turns of --> pgm_stop
+	 */
 	pgm_state =
 			(!HAL_GPIO_ReadPin(GPIOC ,PGM_1_Pin) << 0)|
 			(!HAL_GPIO_ReadPin(GPIOC ,PGM_2_Pin) << 1)|
@@ -546,16 +551,16 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+//Overwrite _write for ITM_Console
 int _write(int file, char *ptr, int len)
 {
-  /* Implement your write code here. This is
-     used by puts and printf for example */
   int i=0;
   for(i=0 ; i<len ; i++)
     ITM_SendChar((*ptr++));
   return len;
 }
 
+/*Callback after each stepper pulse. When homing is in in progress nothing happens here*/
 void POS_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
 	if(homingComplete == RESET) return;
@@ -568,6 +573,7 @@ void POS_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 	}
 }
 
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if(GPIO_Pin == E_STOP_Pin) {
@@ -577,6 +583,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   }
 }
 
+/*
+ * @brief: helper function to set the LEDs.
+ *
+ * @param:  bitpattern representing LED state:
+ * 			RED, YELLOW, GREEN
+ * 			1 = on, 0 = off
+ * @return: 0 on success
+ */
 int Set_Led_Output(uint8_t led_mask){
 	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, led_mask & RED);
 	HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, led_mask & YELLOW);
@@ -585,6 +599,14 @@ int Set_Led_Output(uint8_t led_mask){
 	return EXIT_SUCCESS;
 }
 
+/*
+ * @brief: helper function to toggle the LEDs.
+ *
+ * @param:  bitpattern representing LEDs to toggle:
+ * 			RED, YELLOW, GREEN
+ * 			1 = toggle, 0 = do nothing
+ * @return: 0 on success
+ */
 int Toggle_Led_Output(uint8_t led_mask){
 	if(led_mask & RED) HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
 	if(led_mask & YELLOW)HAL_GPIO_TogglePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin);
@@ -593,18 +615,20 @@ int Toggle_Led_Output(uint8_t led_mask){
 	return EXIT_SUCCESS;
 }
 
+//Emergency stop routine
 int E_Stop_Call(void){
 
 	Set_Led_Output(RED);
-	homingComplete = RESET;
+	homingComplete = RESET; //Reset homing because drive could be moved
 
 	uint8_t text_stop[] = {SEG7_5, SEG7_T, SEG7_0, SEG7_P};
 
-	seg7_displayOnOffMulti(SPIN | ANGLE, 0);
-	seg7_displayOnOffMulti(SPEED, 1);
+	seg7_displayOnOffMulti(SPEED);
+	seg7_setDispAddr(SPEED_ADDR);
 	seg7_display(text_stop);
 
 	while(eStop){
+			//Poll until emergency stop is disabled
 			eStop = HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin);
 		}
 

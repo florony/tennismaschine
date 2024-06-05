@@ -57,6 +57,7 @@ const uint8_t charmap[] = {
 		0x38,   // L
 		0x31,	// T
 		0x73,	// P
+		0x3E,	// U
 };
 
 volatile uint8_t _displayCache[5];   	//cache for performance
@@ -267,21 +268,15 @@ void seg7_setDispAddr(uint16_t disp_addr){
 	disp_addr = disp_addr;
 }
 
-void seg7_displayOnOffMulti(uint8_t display, uint8_t state){
-	if(display & SPEED){
-		seg7_setDispAddr(SPEED_ADDR);
-		state ? seg7_displayOn() : seg7_displayOff();
-	}
+void seg7_displayOnOffMulti(uint8_t display){
+	seg7_setDispAddr(SPEED_ADDR);
+	(display & SPEED) ? seg7_displayOn() : seg7_displayOff();
 
-	if(display & SPIN){
-		seg7_setDispAddr(SPIN_ADDR);
-		state ? seg7_displayOn() : seg7_displayOff();
-	}
+	seg7_setDispAddr(SPIN_ADDR);
+	(display & SPIN) ? seg7_displayOn() : seg7_displayOff();
 
-	if(display & ANGLE){
-		seg7_setDispAddr(ANGLE_ADDR);
-		state ? seg7_displayOn() : seg7_displayOff();
-	}
+	seg7_setDispAddr(ANGLE_ADDR);
+	(display & ANGLE) ? seg7_displayOn() : seg7_displayOff();
 }
 
 void seg7_displayIntMulti(uint16_t speed, int16_t spin, uint16_t angle){

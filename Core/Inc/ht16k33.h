@@ -46,6 +46,7 @@
 #define SEG7_L                19
 #define SEG7_T				  20
 #define SEG7_P				  21
+#define SEG7_U				  22
 #define SEG7_NONE             99
 
 void seg7_init(void);		// initializes 7-segment-display
@@ -70,7 +71,7 @@ void seg7_displayColon(uint8_t on);                 	// 0 = off
 void seg7_displayRaw(uint8_t *array, int colon);  		// control the 4 Characters and the colon
 void seg7_setDispAddr(uint16_t disp_addr);
 
-void seg7_displayOnOffMulti(uint8_t display, uint8_t state);
+void seg7_displayOnOffMulti(uint8_t display);
 void seg7_displayIntMulti(uint16_t speed, int16_t spin, uint16_t angle);
 
 #endif /* INC_HT16K33_H_ */

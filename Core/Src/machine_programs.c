@@ -13,13 +13,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static uint16_t adc_result[3];
-static uint16_t speed_percent;
-static int16_t spin_percent;
-static uint16_t angle_degree;
-static uint16_t last_adc[3];
-static uint32_t last_rand_tick;
-static uint32_t last_blink_tick;
+static uint16_t adc_result[3];		//Array to store the raw ADC results
+static uint16_t speed_percent;		//Speed converted to percent
+static int16_t spin_percent;		//Spin converted to percent
+static uint16_t angle_degree;		//Angle converted to degrees
+static uint16_t last_adc[3];		//Array to store the last valid ADC readings
+static uint32_t last_rand_tick;		//Timestamp when last random value generation takes place
+static uint32_t last_blink_tick;	//Timestamp for blinking LED
 
 uint32_t last_angle_change;
 
@@ -33,10 +33,9 @@ int pgm_stop(void){
 		mainDrvRunning = RESET;
 	}
 
-	uint8_t text_off[] = {SEG7_0, SEG7_F, SEG7_F};
+	uint8_t text_off[] = {SEG7_0, SEG7_F, SEG7_F, SEG7_SPACE};
 
-	seg7_displayOnOffMulti(SPIN | ANGLE, 0);
-	seg7_displayOnOffMulti(SPEED, 1);
+	seg7_displayOnOffMulti(SPEED);
 	seg7_setDispAddr(SPEED);
 	seg7_display(text_off);
 
@@ -53,7 +52,7 @@ int pgm_stop(void){
 int pgm_manual(void){
 
 	Set_Led_Output(GREEN);
-	seg7_displayOnOffMulti(SPEED | SPIN | ANGLE, 1);
+	seg7_displayOnOffMulti(SPEED | SPIN | ANGLE);
 
 	get_adc_values(adc_result);
 
@@ -91,8 +90,7 @@ int pgm_manual(void){
 int pgm_auto_speed(void){
 
 	Set_Led_Output(GREEN);
-	seg7_displayOnOffMulti(SPEED | SPIN, 0);
-	seg7_displayOnOffMulti(ANGLE, 1);
+	seg7_displayOnOffMulti(ANGLE);
 
 	get_adc_values(adc_result);
 
@@ -104,6 +102,7 @@ int pgm_auto_speed(void){
 	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
 		last_adc[2] = adc_result[2];
 		set_pos_posdrv(angle_degree);
+		last_angle_change = HAL_GetTick();
 	}
 
 	if((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000){
@@ -122,7 +121,12 @@ int pgm_auto_speed(void){
 int pgm_auto(void){
 
 	Set_Led_Output(GREEN);
-	seg7_displayOnOffMulti(SPEED | SPIN | ANGLE, 0);
+
+	uint8_t text_auto[] = {SEG7_A, SEG7_U, SEG7_T, SEG7_0};
+
+	seg7_displayOnOffMulti(SPEED);
+	seg7_setDispAddr(SPEED);
+	seg7_display(text_auto);
 
 	if((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000){
 
