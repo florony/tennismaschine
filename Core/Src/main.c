@@ -47,7 +47,9 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+
 I2C_HandleTypeDef hi2c2;
+
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 
@@ -61,6 +63,7 @@ FlagStatus mainDrvRunning = RESET;	//State of both main drives
 FlagStatus homingComplete = RESET;	//Reset if homing is needed
 FlagStatus eStop = SET;				//State of emergency stop
 FlagStatus posDrvRunning = RESET;	//State of steper drive
+FlagStatus endPos = RESET;			//End position reached by stepper
 
 /* USER CODE END PV */
 
@@ -112,8 +115,6 @@ int main(void)
 	  //Wait for ADC calibration finished
   }
 
-  eStop = HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin); //Get initial state of emergency stop
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -126,9 +127,14 @@ int main(void)
 
   HAL_TIM_RegisterCallback(&htim2, HAL_TIM_PWM_PULSE_FINISHED_CB_ID, POS_PulseFinishedCallback);
 
+  seg7_init(SPEED_ADDR);
+  seg7_init(SPIN_ADDR);
+  seg7_init(ANGLE_ADDR);
+
   //Set position signal of main drives
   HAL_GPIO_WritePin(TDRV_DIR_GPIO_Port, TDRV_DIR_Pin, MAIN_DRV_DIR_POLARITY ? GPIO_PIN_SET : GPIO_PIN_RESET);
   HAL_GPIO_WritePin(BDRV_DIR_GPIO_Port, BDRV_DIR_Pin, MAIN_DRV_DIR_POLARITY ? GPIO_PIN_RESET : GPIO_PIN_SET);
+  eStop = !HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin); //Get initial state of emergency stop
 
   Set_Led_Output(YELLOW);
 
@@ -152,11 +158,11 @@ int main(void)
 	/*This if switches the angle display blinking on if the stepper drive is on and
 	* and the last change is longer ago then BLINK_DISP_DELAY*/
 	if((HAL_GetTick() - last_angle_change > BLINK_DISP_DELAY) & posDrvRunning){
-		seg7_setDispAddr(ANGLE);
+		seg7_setDispAddr(ANGLE_ADDR);
 		seg7_setBlinkRate(2);
 	} else
 	{
-		seg7_setDispAddr(ANGLE);
+		seg7_setDispAddr(ANGLE_ADDR);
 		seg7_setBlinkRate(0);
 	}
 
@@ -383,7 +389,7 @@ static void MX_TIM1_Init(void)
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 450;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
@@ -519,7 +525,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : SW_2_Pin */
   GPIO_InitStruct.Pin = SW_2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(SW_2_GPIO_Port, &GPIO_InitStruct);
 
@@ -539,11 +545,14 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : E_STOP_Pin */
   GPIO_InitStruct.Pin = E_STOP_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(E_STOP_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
@@ -567,10 +576,12 @@ void POS_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 
 	actualPos = actualPos + posDrvDir;
 
-	if((actualPos == targetPos) | eStop){
+	if((actualPos == targetPos) | eStop | endPos){
 		HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_2);
 		posDrvRunning = RESET;
 	}
+
+	if(endPos) Error_Handler();
 }
 
 
@@ -581,6 +592,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   } else {
       __NOP();
   }
+
+  if(GPIO_Pin == SW_2_Pin) {
+      endPos = SET;
+    } else {
+        __NOP();
+    }
 }
 
 /*
@@ -624,12 +641,11 @@ int E_Stop_Call(void){
 	uint8_t text_stop[] = {SEG7_5, SEG7_T, SEG7_0, SEG7_P};
 
 	seg7_displayOnOffMulti(SPEED);
-	seg7_setDispAddr(SPEED_ADDR);
-	seg7_display(text_stop);
+	seg7_display(text_stop, SPEED_ADDR);
 
 	while(eStop){
 			//Poll until emergency stop is disabled
-			eStop = HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin);
+			eStop = !HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin);
 		}
 
 	eStop = RESET;

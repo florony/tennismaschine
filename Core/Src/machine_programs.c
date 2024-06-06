@@ -36,8 +36,7 @@ int pgm_stop(void){
 	uint8_t text_off[] = {SEG7_0, SEG7_F, SEG7_F, SEG7_SPACE};
 
 	seg7_displayOnOffMulti(SPEED);
-	seg7_setDispAddr(SPEED);
-	seg7_display(text_off);
+	seg7_display(text_off, SPEED_ADDR);
 
 	if((HAL_GetTick() - last_blink_tick) > BLINK_INT_MS){
 
@@ -60,7 +59,9 @@ int pgm_manual(void){
 	spin_percent = (adc_result[1]*100/0xFFF)-50;
 	angle_degree = (adc_result[2]*90/0xFFF);
 
-	seg7_displayIntMulti(speed_percent, spin_percent, angle_degree);
+	seg7_displayInt((int16_t)speed_percent, SPEED_ADDR);
+	seg7_displayInt((int16_t)spin_percent, SPIN_ADDR);
+	seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
 
 	if(
 		(abs(last_adc[0] - adc_result[0]) > MIN_SPEED_DELTA) |
@@ -90,14 +91,18 @@ int pgm_manual(void){
 int pgm_auto_speed(void){
 
 	Set_Led_Output(GREEN);
-	seg7_displayOnOffMulti(ANGLE);
+
+	uint8_t text_auto[] = {SEG7_A, SEG7_U, SEG7_T, SEG7_0};
+
+	seg7_displayOnOffMulti(SPEED | SPIN | ANGLE);
+	seg7_display(text_auto, SPEED_ADDR);
+	seg7_display(text_auto, SPIN_ADDR);
 
 	get_adc_values(adc_result);
 
 	angle_degree = (adc_result[2]*90/0xFFF);
 
-	seg7_setDispAddr(ANGLE_ADDR);
-	seg7_displayInt((int) angle_degree);
+	seg7_displayInt((uint16_t) angle_degree, ANGLE_ADDR);
 
 	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
 		last_adc[2] = adc_result[2];
@@ -124,9 +129,10 @@ int pgm_auto(void){
 
 	uint8_t text_auto[] = {SEG7_A, SEG7_U, SEG7_T, SEG7_0};
 
-	seg7_displayOnOffMulti(SPEED);
-	seg7_setDispAddr(SPEED);
-	seg7_display(text_auto);
+	seg7_displayOnOffMulti(SPEED | SPIN | ANGLE);
+	seg7_display(text_auto, SPEED_ADDR);
+	seg7_display(text_auto, SPIN_ADDR);
+	seg7_display(text_auto, ANGLE_ADDR);
 
 	if((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000){
 

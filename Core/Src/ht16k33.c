@@ -111,13 +111,13 @@ void _writePosPoint(uint8_t pos, uint8_t mask, int point) {
 //####################################
 //##### BEGIN: CONTROL-FUNCTIONS #####
 
-void seg7_init() {
-	seg7_reset();
+void seg7_init(uint16_t disp_addr) {
+	seg7_reset(disp_addr);
 	seg7_displayOn();
 }
 
-void seg7_reset() {
-	seg7_displayClear();
+void seg7_reset(uint16_t disp_addr) {
+	seg7_displayClear(disp_addr);
 	seg7_clearCache();
 	seg7_setBlinkRate(0);
 	seg7_setDigits(4);
@@ -173,13 +173,13 @@ void seg7_setDigits(uint8_t value) {
 //####################################
 //##### BEGIN: DISPLAY-FUNCTIONS #####
 
-void seg7_displayClear() {
+void seg7_displayClear(uint16_t disp_addr) {
 	uint8_t arr[4] = { SEG7_SPACE, SEG7_SPACE, SEG7_SPACE, SEG7_SPACE };
-	seg7_display(arr);
+	seg7_display(arr, disp_addr);
 	seg7_displayColon(0);
 }
 
-int seg7_displayInt(int n) {
+int seg7_displayInt(int n, uint16_t disp_addr) {
 	int inRange = ((-1000 < n) && (n < 10000));
 	int neg = (n < 0);
 
@@ -210,12 +210,12 @@ int seg7_displayInt(int n) {
 		}
 	}
 
-	seg7_display(arr);
+	seg7_display(arr, disp_addr);
 
 	return inRange;
 }
 
-int seg7_displayTime(uint8_t left, uint8_t right, int colon) {
+int seg7_displayTime(uint8_t left, uint8_t right, int colon, uint16_t disp_addr) {
 	int inRange = ((left < 100) && (right < 100));
 	uint8_t arr[4];
 
@@ -225,13 +225,15 @@ int seg7_displayTime(uint8_t left, uint8_t right, int colon) {
 	arr[2] = right / 10;
 	arr[3] = right - arr[2] * 10;
 
-	seg7_display(arr);
+	seg7_display(arr, disp_addr);
 	seg7_displayColon(colon);
 
 	return inRange;
 }
 
-void seg7_display(uint8_t *array) {
+void seg7_display(uint8_t *array, uint16_t disp_addr) {
+	seg7_setDispAddr(disp_addr);
+
 	for (uint8_t i = 0; i < (4 - _digits); i++) {
 		if (array[i] != 0) {
 			break;
@@ -264,8 +266,9 @@ void seg7_displayRaw(uint8_t *array, int colon) {
 	_writePos(2, colon ? 255 : 0);
 }
 
-void seg7_setDispAddr(uint16_t disp_addr){
-	disp_addr = disp_addr;
+void seg7_setDispAddr(uint16_t addr){
+	disp_addr = addr;
+	seg7_clearCache();
 }
 
 void seg7_displayOnOffMulti(uint8_t display){
@@ -277,15 +280,6 @@ void seg7_displayOnOffMulti(uint8_t display){
 
 	seg7_setDispAddr(ANGLE_ADDR);
 	(display & ANGLE) ? seg7_displayOn() : seg7_displayOff();
-}
-
-void seg7_displayIntMulti(uint16_t speed, int16_t spin, uint16_t angle){
-	seg7_setDispAddr(SPEED_ADDR);
-	seg7_displayInt((int) speed);
-	seg7_setDispAddr(SPIN_ADDR);
-	seg7_displayInt((int) spin);
-	seg7_setDispAddr(ANGLE_ADDR);
-	seg7_displayInt((int) angle);
 }
 
 //##### END: DISPLAY-FUNCTIONS #####

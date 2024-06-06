@@ -86,6 +86,7 @@ int Toggle_Led_Output(uint8_t);
 #define Input_1_GPIO_Port GPIOC
 #define SW_2_Pin GPIO_PIN_0
 #define SW_2_GPIO_Port GPIOB
+#define SW_2_EXTI_IRQn EXTI0_IRQn
 #define BDRV_FAIL_Pin GPIO_PIN_6
 #define BDRV_FAIL_GPIO_Port GPIOC
 #define TDRV_FAIL_Pin GPIO_PIN_8
@@ -133,8 +134,8 @@ int Toggle_Led_Output(uint8_t);
 #define POS_DRV_PERIOD(f, presc, clk) (clk/presc/f)
 #define MIN_ANGLE_DELTA 50
 #define MIN_SPEED_DELTA 50
-#define MAIN_DRV_DIR_POLARITY 0
-#define MAIN_DRV_MIN_DUTY 10
+#define MAIN_DRV_DIR_POLARITY 1
+#define MAIN_DRV_MIN_DUTY 15
 #define MAIN_DRV_MAX_DUTY 90
 #define AUTO_DELAY 10
 

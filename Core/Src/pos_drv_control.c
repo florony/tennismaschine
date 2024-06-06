@@ -42,7 +42,7 @@ int home_pos_drive(void){
 
 	HAL_GPIO_WritePin(POS_DIR_GPIO_Port, POS_DIR_Pin, POS_DRV_DIR_POLARITY ? GPIO_PIN_SET : GPIO_PIN_RESET);
 
-	if(!HAL_GPIO_ReadPin (SW_1_GPIO_Port, SW_1_Pin)){
+	if(HAL_GPIO_ReadPin (SW_1_GPIO_Port, SW_1_Pin)){
 
 		HAL_TIM_PWM_Start_IT(&htim2, TIM_CHANNEL_2);
 

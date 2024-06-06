@@ -49,8 +49,8 @@
 #define SEG7_U				  22
 #define SEG7_NONE             99
 
-void seg7_init(void);		// initializes 7-segment-display
-void seg7_reset(void);		// resets 7-segment-display
+void seg7_init(uint16_t disp_addr);		// initializes 7-segment-display
+void seg7_reset(uint16_t disp_addr);		// resets 7-segment-display
 void seg7_clearCache(void);	// force clearing of the cache
 void seg7_refresh(void); 	// force writing of cache to display
 
@@ -61,17 +61,16 @@ void seg7_setBrightness(uint8_t value);		// 0 .. 15	  0 = off, 15 = max. brightn
 void seg7_setBlinkRate(uint8_t value);      // 0 .. 3     0 = off, 1 = 2Hz, 2 = 1Hz, 3 = 0,5Hz
 void seg7_setDigits(uint8_t value);			// 0 .. 4	  minimal number of digits shown
 
-void seg7_displayClear(void);									// fills display with spaces
-int seg7_displayInt(int n);                   					// -999 .. 9999
-int seg7_displayTime(uint8_t left, uint8_t right, int colon);	// 00:00 .. 99:99, colon can be set to false (e.g. simulate blink)
+void seg7_displayClear(uint16_t disp_addr);									// fills display with spaces
+int seg7_displayInt(int n, uint16_t disp_addr);                   					// -999 .. 9999
+int seg7_displayTime(uint8_t left, uint8_t right, int colon, uint16_t disp_addr);	// 00:00 .. 99:99, colon can be set to false (e.g. simulate blink)
 
-void seg7_display(uint8_t *array);                  	// displays 4 displayable Character values (stored in array)
+void seg7_display(uint8_t *array, uint16_t disp_addr);                  	// displays 4 displayable Character values (stored in array)
 void seg7_displayPoint(uint8_t *array, uint8_t point);  // displays 4 displayable Character values (stored in array), point = digit with . (0..3)
 void seg7_displayColon(uint8_t on);                 	// 0 = off
 void seg7_displayRaw(uint8_t *array, int colon);  		// control the 4 Characters and the colon
 void seg7_setDispAddr(uint16_t disp_addr);
 
 void seg7_displayOnOffMulti(uint8_t display);
-void seg7_displayIntMulti(uint16_t speed, int16_t spin, uint16_t angle);
 
 #endif /* INC_HT16K33_H_ */
