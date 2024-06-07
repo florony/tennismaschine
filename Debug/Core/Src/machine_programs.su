@@ -1,5 +1,5 @@
 ../Core/Src/machine_programs.c:26:5:pgm_stop	16	static
 ../Core/Src/machine_programs.c:51:5:pgm_manual	200	static
-../Core/Src/machine_programs.c:90:5:pgm_auto_speed	208	static
-../Core/Src/machine_programs.c:124:5:pgm_auto	216	static
-../Core/Src/machine_programs.c:150:5:get_adc_values	24	static
+../Core/Src/machine_programs.c:97:5:pgm_auto_speed	208	static
+../Core/Src/machine_programs.c:138:5:pgm_auto	216	static
+../Core/Src/machine_programs.c:164:5:get_adc_values	24	static

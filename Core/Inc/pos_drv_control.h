@@ -8,7 +8,11 @@
 #ifndef SRC_POS_DRV_CONTROL_H_
 #define SRC_POS_DRV_CONTROL_H_
 
+#define PULSE_DELAY 10
+
 #include <stdint.h>
+
+extern uint16_t actualPosdDeg;
 
 int set_pos_posdrv(uint16_t angle_degree);
 

@@ -38,15 +38,15 @@ extern "C" {
 /* USER CODE BEGIN ET */
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim4;
 extern ADC_HandleTypeDef hadc1;
 extern FlagStatus mainDrvRunning;
 extern I2C_HandleTypeDef hi2c2;
-extern uint16_t actualPos;
-extern uint16_t targetPos;
-extern int8_t posDrvDir;
-extern TIM_HandleTypeDef htim2;
 extern FlagStatus homingComplete;
 extern FlagStatus posDrvRunning;
+extern FlagStatus endPos;
+extern FlagStatus startPos;
+extern uint8_t posDrvDir;
 
 /* USER CODE END ET */
 
@@ -78,8 +78,11 @@ int Toggle_Led_Output(uint8_t);
 #define SPIN_GPIO_Port GPIOC
 #define ANGLE_Pin GPIO_PIN_2
 #define ANGLE_GPIO_Port GPIOC
+#define POS_CW_Pin GPIO_PIN_1
+#define POS_CW_GPIO_Port GPIOA
 #define SW_1_Pin GPIO_PIN_4
 #define SW_1_GPIO_Port GPIOA
+#define SW_1_EXTI_IRQn EXTI4_IRQn
 #define LED_RED_Pin GPIO_PIN_7
 #define LED_RED_GPIO_Port GPIOA
 #define Input_1_Pin GPIO_PIN_5
@@ -107,8 +110,8 @@ int Toggle_Led_Output(uint8_t);
 #define PGM_3_GPIO_Port GPIOC
 #define PGM_2_Pin GPIO_PIN_12
 #define PGM_2_GPIO_Port GPIOC
-#define POS_DIR_Pin GPIO_PIN_7
-#define POS_DIR_GPIO_Port GPIOB
+#define POS_CCW_Pin GPIO_PIN_7
+#define POS_CCW_GPIO_Port GPIOB
 #define TDRV_DIR_Pin GPIO_PIN_8
 #define TDRV_DIR_GPIO_Port GPIOB
 #define E_STOP_Pin GPIO_PIN_9

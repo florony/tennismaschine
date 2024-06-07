@@ -73,8 +73,15 @@ int pgm_manual(void){
 	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
 		last_adc[2] = adc_result[2];
 		seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
-		set_pos_posdrv(angle_degree);
+		seg7_setDispAddr(ANGLE_ADDR);
+		seg7_setBlinkRate(3);
 		last_angle_change = HAL_GetTick();
+	}
+
+	if(HAL_GetTick() - last_angle_change > ANGLE_SET_DELAY){
+		seg7_setDispAddr(ANGLE_ADDR);
+		seg7_setBlinkRate(0);
+		set_pos_posdrv(angle_degree);
 	}
 
 	if(!mainDrvRunning){
@@ -104,8 +111,15 @@ int pgm_auto_speed(void){
 	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
 		last_adc[2] = adc_result[2];
 		seg7_displayInt((uint16_t) angle_degree, ANGLE_ADDR);
-		set_pos_posdrv(angle_degree);
+		seg7_setDispAddr(ANGLE_ADDR);
+		seg7_setBlinkRate(3);
 		last_angle_change = HAL_GetTick();
+	}
+
+	if(HAL_GetTick() - last_angle_change > ANGLE_SET_DELAY){
+			seg7_setDispAddr(ANGLE_ADDR);
+			seg7_setBlinkRate(0);
+			set_pos_posdrv(angle_degree);
 	}
 
 	if((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000){

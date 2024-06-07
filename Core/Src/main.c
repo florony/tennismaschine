@@ -52,18 +52,18 @@ I2C_HandleTypeDef hi2c2;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
-
-int8_t posDrvDir = 0;	//-1 toward homing pos, 1 toward end pos
-uint16_t actualPos = 0;	//Actual position of stepper drive in steps
-uint16_t targetPos = 0;	//Target position of stepper drive in steps
-
 FlagStatus mainDrvRunning = RESET;	//State of both main drives
-FlagStatus homingComplete = RESET;	//Reset if homing is needed
+FlagStatus posDrvRunning = RESET;	//State of DC drive
+FlagStatus initHomingComplete = RESET;	//Reset if initial homing is needed
+FlagStatus homingComplete = RESET;	//Reset if simple homing is needed
 FlagStatus eStop = SET;				//State of emergency stop
-FlagStatus posDrvRunning = RESET;	//State of steper drive
-FlagStatus endPos = RESET;			//End position reached by stepper
+FlagStatus startPos = RESET;		//Start position reached
+FlagStatus endPos = RESET;			//End position reached
+
+uint8_t posDrvDir = 0;				//Direction of pos drive 1 = CW, -1 = CCW
 
 /* USER CODE END PV */
 
@@ -74,6 +74,7 @@ static void MX_ADC1_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 void POS_PulseFinishedCallback(TIM_HandleTypeDef *htim);
 
@@ -123,9 +124,11 @@ int main(void)
   MX_I2C2_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_TIM_RegisterCallback(&htim2, HAL_TIM_PWM_PULSE_FINISHED_CB_ID, POS_PulseFinishedCallback);
+  HAL_TIM_RegisterCallback(&htim2, HAL_TIM_PERIOD_ELAPSED_CB_ID, POS_PulseFinishedCallback);
+  HAL_TIM_RegisterCallback(&htim4, HAL_TIM_PERIOD_ELAPSED_CB_ID, POS_PulseFinishedCallback);
 
   seg7_init(SPEED_ADDR);
   seg7_init(SPIN_ADDR);
@@ -134,7 +137,10 @@ int main(void)
   //Set position signal of main drives
   HAL_GPIO_WritePin(TDRV_DIR_GPIO_Port, TDRV_DIR_Pin, MAIN_DRV_DIR_POLARITY ? GPIO_PIN_SET : GPIO_PIN_RESET);
   HAL_GPIO_WritePin(BDRV_DIR_GPIO_Port, BDRV_DIR_Pin, MAIN_DRV_DIR_POLARITY ? GPIO_PIN_RESET : GPIO_PIN_SET);
+
   eStop = !HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin); //Get initial state of emergency stop
+  startPos = !HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);
+  endPos = !HAL_GPIO_ReadPin(SW_2_GPIO_Port, SW_2_Pin);
 
   Set_Led_Output(YELLOW);
 
@@ -150,20 +156,13 @@ int main(void)
   {
 	if(eStop) E_Stop_Call(); //Call emergency stop routine
 
-	if(homingComplete == RESET){
-		home_pos_drive();
+	if(initHomingComplete == RESET){
+		init_home_pos_drive();
 		Set_Led_Output(GREEN);
 	}
-
-	/*This if switches the angle display blinking on if the stepper drive is on and
-	* and the last change is longer ago then BLINK_DISP_DELAY*/
-	if((HAL_GetTick() - last_angle_change > BLINK_DISP_DELAY) & posDrvRunning){
-		seg7_setDispAddr(ANGLE_ADDR);
-		seg7_setBlinkRate(2);
-	} else
-	{
-		seg7_setDispAddr(ANGLE_ADDR);
-		seg7_setBlinkRate(0);
+	else if (homingComplete == RESET){
+		home_pos_drive();
+		Set_Led_Output(GREEN);
 	}
 
 	pgm_state = 0;
@@ -433,6 +432,7 @@ static void MX_TIM2_Init(void)
   /* USER CODE END TIM2_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_SlaveConfigTypeDef sSlaveConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
 
@@ -440,9 +440,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 14000;
+  htim2.Init.Prescaler = 7000;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 250;
+  htim2.Init.Period = 20000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -454,7 +454,17 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+  if (HAL_TIM_OC_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OnePulse_Init(&htim2, TIM_OPMODE_SINGLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_DISABLE;
+  sSlaveConfig.InputTrigger = TIM_TS_ITR0;
+  if (HAL_TIM_SlaveConfigSynchro(&htim2, &sSlaveConfig) != HAL_OK)
   {
     Error_Handler();
   }
@@ -464,11 +474,11 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 125;
+  sConfigOC.OCMode = TIM_OCMODE_ACTIVE;
+  sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  if (HAL_TIM_OC_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -476,6 +486,76 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
+
+}
+
+/**
+  * @brief TIM4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM4_Init(void)
+{
+
+  /* USER CODE BEGIN TIM4_Init 0 */
+
+  /* USER CODE END TIM4_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_SlaveConfigTypeDef sSlaveConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 7000;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 20000;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OnePulse_Init(&htim4, TIM_OPMODE_SINGLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_DISABLE;
+  sSlaveConfig.InputTrigger = TIM_TS_ITR1;
+  if (HAL_TIM_SlaveConfigSynchro(&htim4, &sSlaveConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_ACTIVE;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
+
+  /* USER CODE END TIM4_Init 2 */
+  HAL_TIM_MspPostInit(&htim4);
 
 }
 
@@ -500,11 +580,11 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(BDRV_DIR_GPIO_Port, BDRV_DIR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, POS_DIR_Pin|TDRV_DIR_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(TDRV_DIR_GPIO_Port, TDRV_DIR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : SW_1_Pin */
   GPIO_InitStruct.Pin = SW_1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(SW_1_GPIO_Port, &GPIO_InitStruct);
 
@@ -536,12 +616,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(BDRV_DIR_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : POS_DIR_Pin TDRV_DIR_Pin */
-  GPIO_InitStruct.Pin = POS_DIR_Pin|TDRV_DIR_Pin;
+  /*Configure GPIO pin : TDRV_DIR_Pin */
+  GPIO_InitStruct.Pin = TDRV_DIR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(TDRV_DIR_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : E_STOP_Pin */
   GPIO_InitStruct.Pin = E_STOP_Pin;
@@ -552,6 +632,9 @@ static void MX_GPIO_Init(void)
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
@@ -569,19 +652,10 @@ int _write(int file, char *ptr, int len)
   return len;
 }
 
-/*Callback after each stepper pulse. When homing is in in progress nothing happens here*/
+/*Callback after pulse finished*/
 void POS_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
-	if(homingComplete == RESET) return;
-
-	actualPos = actualPos + posDrvDir;
-
-	if((actualPos == targetPos) | eStop | endPos){
-		HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_2);
-		posDrvRunning = RESET;
-	}
-
-	if(endPos) Error_Handler();
+	posDrvRunning = RESET;
 }
 
 
@@ -593,8 +667,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
       __NOP();
   }
 
+  if(GPIO_Pin == SW_1_Pin) {
+	  	  HAL_TIM_OnePulse_Stop(&htim4, TIM_CHANNEL_2);
+	  	  actualPosdDeg = 0;
+	  	  startPos = SET;
+      } else {
+          __NOP();
+      }
+
   if(GPIO_Pin == SW_2_Pin) {
-      endPos = SET;
+	  	  HAL_TIM_OnePulse_Stop(&htim2, TIM_CHANNEL_2);
+	  	  actualPosdDeg = 900;
+	  	  endPos = SET;
     } else {
         __NOP();
     }
