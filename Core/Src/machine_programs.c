@@ -55,9 +55,9 @@ int pgm_manual(void){
 
 	get_adc_values(adc_result);
 
-	speed_percent = adc_result[0]*100/0xFFF;
-	spin_percent = (adc_result[1]*100/0xFFF)-50;
-	angle_degree = (adc_result[2]*90/0xFFF);
+	speed_percent = adc_result[0]*100/4022;
+	spin_percent = (adc_result[1]*100/4022)-50;
+	angle_degree = (adc_result[2]*90/4022);
 
 	seg7_displayInt((int16_t)speed_percent, SPEED_ADDR);
 	seg7_displayInt((int16_t)spin_percent, SPIN_ADDR);
@@ -100,7 +100,7 @@ int pgm_auto_speed(void){
 
 	get_adc_values(adc_result);
 
-	angle_degree = (adc_result[2]*90/0xFFF);
+	angle_degree = (adc_result[2]*90/4022);
 
 	seg7_displayInt((uint16_t) angle_degree, ANGLE_ADDR);
 

@@ -916,7 +916,7 @@ int pgm_manual(void){
  8000676:	4859      	ldr	r0, [pc, #356]	; (80007dc <pgm_manual+0x178>)
  8000678:	f000 f9de 	bl	8000a38 <get_adc_values>
 
-	speed_percent = adc_result[0]*100/0xFFF;
+	speed_percent = adc_result[0]*100/4022;
  800067c:	4b57      	ldr	r3, [pc, #348]	; (80007dc <pgm_manual+0x178>)
  800067e:	881b      	ldrh	r3, [r3, #0]
  8000680:	461a      	mov	r2, r3
@@ -931,7 +931,7 @@ int pgm_manual(void){
  8000696:	b29a      	uxth	r2, r3
  8000698:	4b52      	ldr	r3, [pc, #328]	; (80007e4 <pgm_manual+0x180>)
  800069a:	801a      	strh	r2, [r3, #0]
-	spin_percent = (adc_result[1]*100/0xFFF)-50;
+	spin_percent = (adc_result[1]*100/4022)-50;
  800069c:	4b4f      	ldr	r3, [pc, #316]	; (80007dc <pgm_manual+0x178>)
  800069e:	885b      	ldrh	r3, [r3, #2]
  80006a0:	461a      	mov	r2, r3
@@ -949,7 +949,7 @@ int pgm_manual(void){
  80006bc:	b21a      	sxth	r2, r3
  80006be:	4b4a      	ldr	r3, [pc, #296]	; (80007e8 <pgm_manual+0x184>)
  80006c0:	801a      	strh	r2, [r3, #0]
-	angle_degree = (adc_result[2]*90/0xFFF);
+	angle_degree = (adc_result[2]*90/4022);
  80006c2:	4b46      	ldr	r3, [pc, #280]	; (80007dc <pgm_manual+0x178>)
  80006c4:	889b      	ldrh	r3, [r3, #4]
  80006c6:	461a      	mov	r2, r3
@@ -1108,7 +1108,7 @@ int pgm_manual(void){
  80007d8:	46bd      	mov	sp, r7
  80007da:	bdf0      	pop	{r4, r5, r6, r7, pc}
  80007dc:	20000098 	.word	0x20000098
- 80007e0:	80080081 	.word	0x80080081
+ 80007e0:	825ae461 	.word	0x825ae461
  80007e4:	2000009e 	.word	0x2000009e
  80007e8:	200000a0 	.word	0x200000a0
  80007ec:	200000a2 	.word	0x200000a2
@@ -1150,7 +1150,7 @@ int pgm_auto_speed(void){
  800082a:	483c      	ldr	r0, [pc, #240]	; (800091c <pgm_auto_speed+0x11c>)
  800082c:	f000 f904 	bl	8000a38 <get_adc_values>
 
-	angle_degree = (adc_result[2]*90/0xFFF);
+	angle_degree = (adc_result[2]*90/4022);
  8000830:	4b3a      	ldr	r3, [pc, #232]	; (800091c <pgm_auto_speed+0x11c>)
  8000832:	889b      	ldrh	r3, [r3, #4]
  8000834:	461a      	mov	r2, r3
@@ -1271,7 +1271,7 @@ int pgm_auto_speed(void){
  8000916:	bdf0      	pop	{r4, r5, r6, r7, pc}
  8000918:	0014160a 	.word	0x0014160a
  800091c:	20000098 	.word	0x20000098
- 8000920:	80080081 	.word	0x80080081
+ 8000920:	825ae461 	.word	0x825ae461
  8000924:	200000a2 	.word	0x200000a2
  8000928:	200000a4 	.word	0x200000a4
  800092c:	200000b4 	.word	0x200000b4
