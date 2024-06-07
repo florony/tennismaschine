@@ -55,13 +55,9 @@ int pgm_manual(void){
 
 	get_adc_values(adc_result);
 
-	speed_percent = adc_result[0]*100/4022;
-	spin_percent = (adc_result[1]*100/4022)-50;
-	angle_degree = (adc_result[2]*90/4022);
-
-	seg7_displayInt((int16_t)speed_percent, SPEED_ADDR);
-	seg7_displayInt((int16_t)spin_percent, SPIN_ADDR);
-	seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
+	speed_percent = adc_result[0]*100/MAX_ADC_VALUE;
+	spin_percent = (adc_result[1]*100/MAX_ADC_VALUE)-50;
+	angle_degree = (adc_result[2]*90/MAX_ADC_VALUE);
 
 	if(
 		(abs(last_adc[0] - adc_result[0]) > MIN_SPEED_DELTA) |
@@ -69,11 +65,14 @@ int pgm_manual(void){
 
 			last_adc[0] = adc_result[0];
 			last_adc[1] = adc_result[1];
+			seg7_displayInt((int16_t)speed_percent, SPEED_ADDR);
+			seg7_displayInt((int16_t)spin_percent, SPIN_ADDR);
 			set_pwm_maindrv(speed_percent, spin_percent, htim1);
 		}
 
 	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
 		last_adc[2] = adc_result[2];
+		seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
 		set_pos_posdrv(angle_degree);
 		last_angle_change = HAL_GetTick();
 	}
@@ -100,12 +99,11 @@ int pgm_auto_speed(void){
 
 	get_adc_values(adc_result);
 
-	angle_degree = (adc_result[2]*90/4022);
-
-	seg7_displayInt((uint16_t) angle_degree, ANGLE_ADDR);
+	angle_degree = (adc_result[2]*90/MAX_ADC_VALUE);
 
 	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
 		last_adc[2] = adc_result[2];
+		seg7_displayInt((uint16_t) angle_degree, ANGLE_ADDR);
 		set_pos_posdrv(angle_degree);
 		last_angle_change = HAL_GetTick();
 	}

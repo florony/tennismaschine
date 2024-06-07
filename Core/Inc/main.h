@@ -138,6 +138,7 @@ int Toggle_Led_Output(uint8_t);
 #define MAIN_DRV_MIN_DUTY 15
 #define MAIN_DRV_MAX_DUTY 90
 #define AUTO_DELAY 10
+#define MAX_ADC_VALUE 4022
 
 /* USER CODE END Private defines */
 

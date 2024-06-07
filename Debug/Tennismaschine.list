@@ -35,19 +35,19 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  15 .debug_ranges 00000e98  00000000  00000000  00034ba8  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  0001a099  00000000  00000000  00035a40  2**0
+ 16 .debug_macro  0001a0a0  00000000  00000000  00035a40  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   00013026  00000000  00000000  0004fad9  2**0
+ 17 .debug_line   00013020  00000000  00000000  0004fae0  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000920b5  00000000  00000000  00062aff  2**0
+ 18 .debug_str    000920c8  00000000  00000000  00062b00  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000050  00000000  00000000  000f4bb4  2**0
+ 19 .comment      00000050  00000000  00000000  000f4bc8  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00004bb8  00000000  00000000  000f4c04  2**2
+ 20 .debug_frame  00004bb8  00000000  00000000  000f4c18  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .stab         00000024  00000000  00000000  000f97bc  2**2
+ 21 .stab         00000024  00000000  00000000  000f97d0  2**2
                   CONTENTS, READONLY, DEBUGGING
- 22 .stabstr      0000004e  00000000  00000000  000f97e0  2**0
+ 22 .stabstr      0000004e  00000000  00000000  000f97f4  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -916,7 +916,7 @@ int pgm_manual(void){
  8000676:	4859      	ldr	r0, [pc, #356]	; (80007dc <pgm_manual+0x178>)
  8000678:	f000 f9de 	bl	8000a38 <get_adc_values>
 
-	speed_percent = adc_result[0]*100/4022;
+	speed_percent = adc_result[0]*100/MAX_ADC_VALUE;
  800067c:	4b57      	ldr	r3, [pc, #348]	; (80007dc <pgm_manual+0x178>)
  800067e:	881b      	ldrh	r3, [r3, #0]
  8000680:	461a      	mov	r2, r3
@@ -931,7 +931,7 @@ int pgm_manual(void){
  8000696:	b29a      	uxth	r2, r3
  8000698:	4b52      	ldr	r3, [pc, #328]	; (80007e4 <pgm_manual+0x180>)
  800069a:	801a      	strh	r2, [r3, #0]
-	spin_percent = (adc_result[1]*100/4022)-50;
+	spin_percent = (adc_result[1]*100/MAX_ADC_VALUE)-50;
  800069c:	4b4f      	ldr	r3, [pc, #316]	; (80007dc <pgm_manual+0x178>)
  800069e:	885b      	ldrh	r3, [r3, #2]
  80006a0:	461a      	mov	r2, r3
@@ -949,7 +949,7 @@ int pgm_manual(void){
  80006bc:	b21a      	sxth	r2, r3
  80006be:	4b4a      	ldr	r3, [pc, #296]	; (80007e8 <pgm_manual+0x184>)
  80006c0:	801a      	strh	r2, [r3, #0]
-	angle_degree = (adc_result[2]*90/4022);
+	angle_degree = (adc_result[2]*90/MAX_ADC_VALUE);
  80006c2:	4b46      	ldr	r3, [pc, #280]	; (80007dc <pgm_manual+0x178>)
  80006c4:	889b      	ldrh	r3, [r3, #4]
  80006c6:	461a      	mov	r2, r3
@@ -965,109 +965,108 @@ int pgm_manual(void){
  80006de:	4b43      	ldr	r3, [pc, #268]	; (80007ec <pgm_manual+0x188>)
  80006e0:	801a      	strh	r2, [r3, #0]
 
-	seg7_displayInt((int16_t)speed_percent, SPEED_ADDR);
- 80006e2:	4b40      	ldr	r3, [pc, #256]	; (80007e4 <pgm_manual+0x180>)
+	if(
+		(abs(last_adc[0] - adc_result[0]) > MIN_SPEED_DELTA) |
+ 80006e2:	4b43      	ldr	r3, [pc, #268]	; (80007f0 <pgm_manual+0x18c>)
  80006e4:	881b      	ldrh	r3, [r3, #0]
- 80006e6:	b21b      	sxth	r3, r3
- 80006e8:	2170      	movs	r1, #112	; 0x70
- 80006ea:	4618      	mov	r0, r3
- 80006ec:	f7ff fe3e 	bl	800036c <seg7_displayInt>
-	seg7_displayInt((int16_t)spin_percent, SPIN_ADDR);
- 80006f0:	4b3d      	ldr	r3, [pc, #244]	; (80007e8 <pgm_manual+0x184>)
- 80006f2:	f9b3 3000 	ldrsh.w	r3, [r3]
- 80006f6:	2171      	movs	r1, #113	; 0x71
- 80006f8:	4618      	mov	r0, r3
- 80006fa:	f7ff fe37 	bl	800036c <seg7_displayInt>
-	seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
- 80006fe:	4b3b      	ldr	r3, [pc, #236]	; (80007ec <pgm_manual+0x188>)
- 8000700:	881b      	ldrh	r3, [r3, #0]
- 8000702:	b21b      	sxth	r3, r3
- 8000704:	2172      	movs	r1, #114	; 0x72
- 8000706:	4618      	mov	r0, r3
- 8000708:	f7ff fe30 	bl	800036c <seg7_displayInt>
-
-	if(
-		(abs(last_adc[0] - adc_result[0]) > MIN_SPEED_DELTA) |
- 800070c:	4b38      	ldr	r3, [pc, #224]	; (80007f0 <pgm_manual+0x18c>)
- 800070e:	881b      	ldrh	r3, [r3, #0]
- 8000710:	461a      	mov	r2, r3
- 8000712:	4b32      	ldr	r3, [pc, #200]	; (80007dc <pgm_manual+0x178>)
- 8000714:	881b      	ldrh	r3, [r3, #0]
- 8000716:	1ad3      	subs	r3, r2, r3
- 8000718:	2b00      	cmp	r3, #0
- 800071a:	bfb8      	it	lt
- 800071c:	425b      	neglt	r3, r3
- 800071e:	2b32      	cmp	r3, #50	; 0x32
- 8000720:	bfcc      	ite	gt
- 8000722:	2301      	movgt	r3, #1
- 8000724:	2300      	movle	r3, #0
- 8000726:	b2da      	uxtb	r2, r3
+ 80006e6:	461a      	mov	r2, r3
+ 80006e8:	4b3c      	ldr	r3, [pc, #240]	; (80007dc <pgm_manual+0x178>)
+ 80006ea:	881b      	ldrh	r3, [r3, #0]
+ 80006ec:	1ad3      	subs	r3, r2, r3
+ 80006ee:	2b00      	cmp	r3, #0
+ 80006f0:	bfb8      	it	lt
+ 80006f2:	425b      	neglt	r3, r3
+ 80006f4:	2b32      	cmp	r3, #50	; 0x32
+ 80006f6:	bfcc      	ite	gt
+ 80006f8:	2301      	movgt	r3, #1
+ 80006fa:	2300      	movle	r3, #0
+ 80006fc:	b2da      	uxtb	r2, r3
 		(abs(last_adc[1] - adc_result[1]) > MIN_SPEED_DELTA)){
- 8000728:	4b31      	ldr	r3, [pc, #196]	; (80007f0 <pgm_manual+0x18c>)
- 800072a:	885b      	ldrh	r3, [r3, #2]
- 800072c:	4619      	mov	r1, r3
- 800072e:	4b2b      	ldr	r3, [pc, #172]	; (80007dc <pgm_manual+0x178>)
- 8000730:	885b      	ldrh	r3, [r3, #2]
- 8000732:	1acb      	subs	r3, r1, r3
- 8000734:	2b00      	cmp	r3, #0
- 8000736:	bfb8      	it	lt
- 8000738:	425b      	neglt	r3, r3
+ 80006fe:	4b3c      	ldr	r3, [pc, #240]	; (80007f0 <pgm_manual+0x18c>)
+ 8000700:	885b      	ldrh	r3, [r3, #2]
+ 8000702:	4619      	mov	r1, r3
+ 8000704:	4b35      	ldr	r3, [pc, #212]	; (80007dc <pgm_manual+0x178>)
+ 8000706:	885b      	ldrh	r3, [r3, #2]
+ 8000708:	1acb      	subs	r3, r1, r3
+ 800070a:	2b00      	cmp	r3, #0
+ 800070c:	bfb8      	it	lt
+ 800070e:	425b      	neglt	r3, r3
 		(abs(last_adc[0] - adc_result[0]) > MIN_SPEED_DELTA) |
- 800073a:	2b32      	cmp	r3, #50	; 0x32
- 800073c:	bfcc      	ite	gt
- 800073e:	2301      	movgt	r3, #1
- 8000740:	2300      	movle	r3, #0
- 8000742:	b2db      	uxtb	r3, r3
- 8000744:	4313      	orrs	r3, r2
- 8000746:	b2db      	uxtb	r3, r3
+ 8000710:	2b32      	cmp	r3, #50	; 0x32
+ 8000712:	bfcc      	ite	gt
+ 8000714:	2301      	movgt	r3, #1
+ 8000716:	2300      	movle	r3, #0
+ 8000718:	b2db      	uxtb	r3, r3
+ 800071a:	4313      	orrs	r3, r2
+ 800071c:	b2db      	uxtb	r3, r3
 	if(
- 8000748:	2b00      	cmp	r3, #0
- 800074a:	d01a      	beq.n	8000782 <pgm_manual+0x11e>
+ 800071e:	2b00      	cmp	r3, #0
+ 8000720:	d028      	beq.n	8000774 <pgm_manual+0x110>
 
 			last_adc[0] = adc_result[0];
- 800074c:	4b23      	ldr	r3, [pc, #140]	; (80007dc <pgm_manual+0x178>)
- 800074e:	881a      	ldrh	r2, [r3, #0]
- 8000750:	4b27      	ldr	r3, [pc, #156]	; (80007f0 <pgm_manual+0x18c>)
- 8000752:	801a      	strh	r2, [r3, #0]
+ 8000722:	4b2e      	ldr	r3, [pc, #184]	; (80007dc <pgm_manual+0x178>)
+ 8000724:	881a      	ldrh	r2, [r3, #0]
+ 8000726:	4b32      	ldr	r3, [pc, #200]	; (80007f0 <pgm_manual+0x18c>)
+ 8000728:	801a      	strh	r2, [r3, #0]
 			last_adc[1] = adc_result[1];
- 8000754:	4b21      	ldr	r3, [pc, #132]	; (80007dc <pgm_manual+0x178>)
- 8000756:	885a      	ldrh	r2, [r3, #2]
- 8000758:	4b25      	ldr	r3, [pc, #148]	; (80007f0 <pgm_manual+0x18c>)
- 800075a:	805a      	strh	r2, [r3, #2]
+ 800072a:	4b2c      	ldr	r3, [pc, #176]	; (80007dc <pgm_manual+0x178>)
+ 800072c:	885a      	ldrh	r2, [r3, #2]
+ 800072e:	4b30      	ldr	r3, [pc, #192]	; (80007f0 <pgm_manual+0x18c>)
+ 8000730:	805a      	strh	r2, [r3, #2]
+			seg7_displayInt((int16_t)speed_percent, SPEED_ADDR);
+ 8000732:	4b2c      	ldr	r3, [pc, #176]	; (80007e4 <pgm_manual+0x180>)
+ 8000734:	881b      	ldrh	r3, [r3, #0]
+ 8000736:	b21b      	sxth	r3, r3
+ 8000738:	2170      	movs	r1, #112	; 0x70
+ 800073a:	4618      	mov	r0, r3
+ 800073c:	f7ff fe16 	bl	800036c <seg7_displayInt>
+			seg7_displayInt((int16_t)spin_percent, SPIN_ADDR);
+ 8000740:	4b29      	ldr	r3, [pc, #164]	; (80007e8 <pgm_manual+0x184>)
+ 8000742:	f9b3 3000 	ldrsh.w	r3, [r3]
+ 8000746:	2171      	movs	r1, #113	; 0x71
+ 8000748:	4618      	mov	r0, r3
+ 800074a:	f7ff fe0f 	bl	800036c <seg7_displayInt>
 			set_pwm_maindrv(speed_percent, spin_percent, htim1);
- 800075c:	4b21      	ldr	r3, [pc, #132]	; (80007e4 <pgm_manual+0x180>)
- 800075e:	881d      	ldrh	r5, [r3, #0]
- 8000760:	4b21      	ldr	r3, [pc, #132]	; (80007e8 <pgm_manual+0x184>)
- 8000762:	f9b3 6000 	ldrsh.w	r6, [r3]
- 8000766:	4c23      	ldr	r4, [pc, #140]	; (80007f4 <pgm_manual+0x190>)
- 8000768:	4668      	mov	r0, sp
- 800076a:	f104 0308 	add.w	r3, r4, #8
- 800076e:	22ac      	movs	r2, #172	; 0xac
- 8000770:	4619      	mov	r1, r3
- 8000772:	f004 ff39 	bl	80055e8 <memcpy>
- 8000776:	e894 000c 	ldmia.w	r4, {r2, r3}
- 800077a:	4631      	mov	r1, r6
- 800077c:	4628      	mov	r0, r5
- 800077e:	f000 fe5b 	bl	8001438 <set_pwm_maindrv>
+ 800074e:	4b25      	ldr	r3, [pc, #148]	; (80007e4 <pgm_manual+0x180>)
+ 8000750:	881d      	ldrh	r5, [r3, #0]
+ 8000752:	4b25      	ldr	r3, [pc, #148]	; (80007e8 <pgm_manual+0x184>)
+ 8000754:	f9b3 6000 	ldrsh.w	r6, [r3]
+ 8000758:	4c26      	ldr	r4, [pc, #152]	; (80007f4 <pgm_manual+0x190>)
+ 800075a:	4668      	mov	r0, sp
+ 800075c:	f104 0308 	add.w	r3, r4, #8
+ 8000760:	22ac      	movs	r2, #172	; 0xac
+ 8000762:	4619      	mov	r1, r3
+ 8000764:	f004 ff40 	bl	80055e8 <memcpy>
+ 8000768:	e894 000c 	ldmia.w	r4, {r2, r3}
+ 800076c:	4631      	mov	r1, r6
+ 800076e:	4628      	mov	r0, r5
+ 8000770:	f000 fe62 	bl	8001438 <set_pwm_maindrv>
 		}
 
 	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
- 8000782:	4b1b      	ldr	r3, [pc, #108]	; (80007f0 <pgm_manual+0x18c>)
- 8000784:	889b      	ldrh	r3, [r3, #4]
- 8000786:	461a      	mov	r2, r3
- 8000788:	4b14      	ldr	r3, [pc, #80]	; (80007dc <pgm_manual+0x178>)
- 800078a:	889b      	ldrh	r3, [r3, #4]
- 800078c:	1ad3      	subs	r3, r2, r3
- 800078e:	2b00      	cmp	r3, #0
- 8000790:	bfb8      	it	lt
- 8000792:	425b      	neglt	r3, r3
- 8000794:	2b32      	cmp	r3, #50	; 0x32
- 8000796:	dd0d      	ble.n	80007b4 <pgm_manual+0x150>
+ 8000774:	4b1e      	ldr	r3, [pc, #120]	; (80007f0 <pgm_manual+0x18c>)
+ 8000776:	889b      	ldrh	r3, [r3, #4]
+ 8000778:	461a      	mov	r2, r3
+ 800077a:	4b18      	ldr	r3, [pc, #96]	; (80007dc <pgm_manual+0x178>)
+ 800077c:	889b      	ldrh	r3, [r3, #4]
+ 800077e:	1ad3      	subs	r3, r2, r3
+ 8000780:	2b00      	cmp	r3, #0
+ 8000782:	bfb8      	it	lt
+ 8000784:	425b      	neglt	r3, r3
+ 8000786:	2b32      	cmp	r3, #50	; 0x32
+ 8000788:	dd14      	ble.n	80007b4 <pgm_manual+0x150>
 		last_adc[2] = adc_result[2];
- 8000798:	4b10      	ldr	r3, [pc, #64]	; (80007dc <pgm_manual+0x178>)
- 800079a:	889a      	ldrh	r2, [r3, #4]
- 800079c:	4b14      	ldr	r3, [pc, #80]	; (80007f0 <pgm_manual+0x18c>)
- 800079e:	809a      	strh	r2, [r3, #4]
+ 800078a:	4b14      	ldr	r3, [pc, #80]	; (80007dc <pgm_manual+0x178>)
+ 800078c:	889a      	ldrh	r2, [r3, #4]
+ 800078e:	4b18      	ldr	r3, [pc, #96]	; (80007f0 <pgm_manual+0x18c>)
+ 8000790:	809a      	strh	r2, [r3, #4]
+		seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
+ 8000792:	4b16      	ldr	r3, [pc, #88]	; (80007ec <pgm_manual+0x188>)
+ 8000794:	881b      	ldrh	r3, [r3, #0]
+ 8000796:	b21b      	sxth	r3, r3
+ 8000798:	2172      	movs	r1, #114	; 0x72
+ 800079a:	4618      	mov	r0, r3
+ 800079c:	f7ff fde6 	bl	800036c <seg7_displayInt>
 		set_pos_posdrv(angle_degree);
  80007a0:	4b12      	ldr	r3, [pc, #72]	; (80007ec <pgm_manual+0x188>)
  80007a2:	881b      	ldrh	r3, [r3, #0]
@@ -1150,7 +1149,7 @@ int pgm_auto_speed(void){
  800082a:	483c      	ldr	r0, [pc, #240]	; (800091c <pgm_auto_speed+0x11c>)
  800082c:	f000 f904 	bl	8000a38 <get_adc_values>
 
-	angle_degree = (adc_result[2]*90/4022);
+	angle_degree = (adc_result[2]*90/MAX_ADC_VALUE);
  8000830:	4b3a      	ldr	r3, [pc, #232]	; (800091c <pgm_auto_speed+0x11c>)
  8000832:	889b      	ldrh	r3, [r3, #4]
  8000834:	461a      	mov	r2, r3
@@ -1166,30 +1165,29 @@ int pgm_auto_speed(void){
  800084c:	4b35      	ldr	r3, [pc, #212]	; (8000924 <pgm_auto_speed+0x124>)
  800084e:	801a      	strh	r2, [r3, #0]
 
-	seg7_displayInt((uint16_t) angle_degree, ANGLE_ADDR);
- 8000850:	4b34      	ldr	r3, [pc, #208]	; (8000924 <pgm_auto_speed+0x124>)
- 8000852:	881b      	ldrh	r3, [r3, #0]
- 8000854:	2172      	movs	r1, #114	; 0x72
- 8000856:	4618      	mov	r0, r3
- 8000858:	f7ff fd88 	bl	800036c <seg7_displayInt>
-
 	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
- 800085c:	4b32      	ldr	r3, [pc, #200]	; (8000928 <pgm_auto_speed+0x128>)
- 800085e:	889b      	ldrh	r3, [r3, #4]
- 8000860:	461a      	mov	r2, r3
- 8000862:	4b2e      	ldr	r3, [pc, #184]	; (800091c <pgm_auto_speed+0x11c>)
- 8000864:	889b      	ldrh	r3, [r3, #4]
- 8000866:	1ad3      	subs	r3, r2, r3
- 8000868:	2b00      	cmp	r3, #0
- 800086a:	bfb8      	it	lt
- 800086c:	425b      	neglt	r3, r3
- 800086e:	2b32      	cmp	r3, #50	; 0x32
- 8000870:	dd0d      	ble.n	800088e <pgm_auto_speed+0x8e>
+ 8000850:	4b35      	ldr	r3, [pc, #212]	; (8000928 <pgm_auto_speed+0x128>)
+ 8000852:	889b      	ldrh	r3, [r3, #4]
+ 8000854:	461a      	mov	r2, r3
+ 8000856:	4b31      	ldr	r3, [pc, #196]	; (800091c <pgm_auto_speed+0x11c>)
+ 8000858:	889b      	ldrh	r3, [r3, #4]
+ 800085a:	1ad3      	subs	r3, r2, r3
+ 800085c:	2b00      	cmp	r3, #0
+ 800085e:	bfb8      	it	lt
+ 8000860:	425b      	neglt	r3, r3
+ 8000862:	2b32      	cmp	r3, #50	; 0x32
+ 8000864:	dd13      	ble.n	800088e <pgm_auto_speed+0x8e>
 		last_adc[2] = adc_result[2];
- 8000872:	4b2a      	ldr	r3, [pc, #168]	; (800091c <pgm_auto_speed+0x11c>)
- 8000874:	889a      	ldrh	r2, [r3, #4]
- 8000876:	4b2c      	ldr	r3, [pc, #176]	; (8000928 <pgm_auto_speed+0x128>)
- 8000878:	809a      	strh	r2, [r3, #4]
+ 8000866:	4b2d      	ldr	r3, [pc, #180]	; (800091c <pgm_auto_speed+0x11c>)
+ 8000868:	889a      	ldrh	r2, [r3, #4]
+ 800086a:	4b2f      	ldr	r3, [pc, #188]	; (8000928 <pgm_auto_speed+0x128>)
+ 800086c:	809a      	strh	r2, [r3, #4]
+		seg7_displayInt((uint16_t) angle_degree, ANGLE_ADDR);
+ 800086e:	4b2d      	ldr	r3, [pc, #180]	; (8000924 <pgm_auto_speed+0x124>)
+ 8000870:	881b      	ldrh	r3, [r3, #0]
+ 8000872:	2172      	movs	r1, #114	; 0x72
+ 8000874:	4618      	mov	r0, r3
+ 8000876:	f7ff fd79 	bl	800036c <seg7_displayInt>
 		set_pos_posdrv(angle_degree);
  800087a:	4b2a      	ldr	r3, [pc, #168]	; (8000924 <pgm_auto_speed+0x124>)
  800087c:	881b      	ldrh	r3, [r3, #0]

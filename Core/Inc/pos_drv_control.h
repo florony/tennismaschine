@@ -12,6 +12,8 @@
 
 int set_pos_posdrv(uint16_t angle_degree);
 
+int init_home_pos_drive(void);
+
 int home_pos_drive(void);
 
 #endif /* SRC_POS_DRV_CONTROL_H_ */
