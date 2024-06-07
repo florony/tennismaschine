@@ -22,6 +22,7 @@ static uint32_t last_rand_tick;		//Timestamp when last random value generation t
 static uint32_t last_blink_tick;	//Timestamp for blinking LED
 
 uint32_t last_angle_change;
+FlagStatus AngleChanged = RESET;
 
 int pgm_stop(void){
 
@@ -75,13 +76,16 @@ int pgm_manual(void){
 		seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
 		seg7_setDispAddr(ANGLE_ADDR);
 		seg7_setBlinkRate(3);
+		AngleChanged = SET;
 		last_angle_change = HAL_GetTick();
+
 	}
 
-	if(HAL_GetTick() - last_angle_change > ANGLE_SET_DELAY){
+	if(((HAL_GetTick() - last_angle_change) > ANGLE_SET_DELAY) & AngleChanged){
 		seg7_setDispAddr(ANGLE_ADDR);
 		seg7_setBlinkRate(0);
 		set_pos_posdrv(angle_degree);
+		AngleChanged = RESET;
 	}
 
 	if(!mainDrvRunning){

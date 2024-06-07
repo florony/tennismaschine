@@ -43,6 +43,7 @@ extern ADC_HandleTypeDef hadc1;
 extern FlagStatus mainDrvRunning;
 extern I2C_HandleTypeDef hi2c2;
 extern FlagStatus homingComplete;
+extern FlagStatus initHomingComplete;
 extern FlagStatus posDrvRunning;
 extern FlagStatus endPos;
 extern FlagStatus startPos;
@@ -120,7 +121,11 @@ int Toggle_Led_Output(uint8_t);
 
 /* USER CODE BEGIN Private defines */
 #define ADC_BASE_REG 0x40012400
-#define ADC_CR2_REG (*(volatile uint32_t*) (ADC_BASE_REG + 0x08))
+#define TIM2_BASE_REG 0x40000000
+#define TIM4_BASE_REG 0x40000800
+#define ADC_CR2_REG (*(volatile uint16_t*) (ADC_BASE_REG + 0x0))
+#define TIM2_CCR1_REG (*(volatile uint16_t*) (TIM2_BASE_REG + 0x0))
+#define TIM4_CCR1_REG (*(volatile uint16_t*) (TIM4_BASE_REG + 0x0))
 
 #define RED ((uint8_t) 1 << 2)
 #define YELLOW ((uint8_t) 1 << 1)
