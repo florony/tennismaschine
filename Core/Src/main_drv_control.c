@@ -11,19 +11,25 @@
 #include <stdlib.h>
 
 /*
- * @brief: Set the PWM dutycycle for the main drives based on a percent value from 0 to 100
+ * @brief: Set the PWM duty cycle for the main drives based on the speed and spin setting
  *
  * @param: 	speed_percent: speed from 0 to 100%
  * 			spin_percent: spin from -50 to +50%
+ * 			htim: timer handle type def
  *
- * */
+ * @return: int 1 on success
+ *
+ * @detail: Calculate the range from min to max duty cycle. Calculate the absolute value for min duty cycle = offset.
+ *	 	 	Calculate absolute value for max duty cycle. Calculate the absolute target speed value based on input argument
+ *	 	 	speed_percent. Set the compare registers for the main drives.
+ */
 
 
 int set_pwm_maindrv(uint16_t speed_percent, int16_t spin_percent, TIM_HandleTypeDef htim){
 
-	/*Calculate the range from 10 to 90 percent and the offset
-	 * to 10 percent of the counter value therefore the init values
-	 * of htim1 are used.*/
+	/*Calculate the range from min to max duty cycle. Calculate the absolute value for min duty cycle = offset.
+	 * Calculate absolute value for max duty cycle. Calculate the absolute target speed value based on input argument
+	 * speed_percent. Set the compare registers for the main drives.*/
 
 	uint32_t speed_range = htim.Init.Period*(MAIN_DRV_MAX_DUTY - MAIN_DRV_MIN_DUTY)/100;
 	uint32_t speed_offset = htim.Init.Period*MAIN_DRV_MIN_DUTY/100;
@@ -41,6 +47,26 @@ int set_pwm_maindrv(uint16_t speed_percent, int16_t spin_percent, TIM_HandleType
 	return EXIT_SUCCESS;
 }
 
+/*
+ * @brief: Calculate the compare register values for the main drives based on speed an spin value.
+ *
+ * @param: 	min_speed: minimum absolute value for register
+ * 			max_speed: maximum absolute value for register
+ * 			abs_speed: target absolute speed value
+ * 			spin_percent: target spin value in percent
+ * 			top_drv: pointer to register value for top drive
+ * 			bottom_drv: pointer to register value for bottom drive
+ *
+ * @return: int 1 on success
+ *
+ * @detail: First the speed difference between both drives is calculated bases on the absolute spin value.
+ * 			Top and bottom margin from absolute speed value to max and min possible value is calculated.
+ * 			Then the register pointers are defined as slower and faster drive. If the top margin is smaller
+ * 			than the absolute speed + the required speed difference, the faster drive is set to max speed
+ * 			and the slower drive to max speed - 2 time the difference for each drive. Same procedure for the
+ * 			slower drive with bottom margin.
+ * 			If the margin limits are not reached, the register value is the absolute speed +/- the difference.
+ * */
 int calc_drv_dutycycle(
 		uint32_t min_speed,
 		uint32_t max_speed,

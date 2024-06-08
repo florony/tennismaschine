@@ -13,29 +13,34 @@
 #include "main.h"
 #include "pos_drv_control.h"
 
-uint16_t actualPosdDeg;	//Actual pos of drive in decaDeg, relative to home
-static uint16_t msPerdDegCw;	//Millisecs per degree for clockwise side
-static uint16_t msPerdDegCcw;	//Millisecs per degree for counterclockwise side
+int16_t actualPosdDeg;			//Actual position of drive in decaDeg, relative to home
+static uint16_t msPerdDegCw;	//Milliseconds per decaDeg for clockwise side
+static uint16_t msPerdDegCcw;	//Milliseconds per decaDeg for counterclockwise side
+
+/**
+ * @brief: Set the position drive to the given value.
+ *
+ * @param: uint16_t angle_degree: target position in degrees
+ *
+ * @return: int 0 on success 1 on failure
+ *
+ * @detail: if drive is running, the drive is stopped and the remaining time of the pulse is calculated.
+ * Based on the direction, the actual position is corrected. Pulse duration is calculated and written to the register.
+ * Drive is started in desired direction an new actual position is set.
+ */
 
 int set_pos_posdrv(uint16_t angle_degree){
 
-	/*Check if drive is running, if true get current reg state and take it as correction value for actual value
-	 * calc actual value by using the correction from register (remaining pulse duration corrected by dir)
-	 * Calc the new target val based on target degree value.
-	 * Calc new pulse duration based on target value, actual value and direction
-	 * fire pulse set moving flag to true
-	 * TODO add callback to reset flag
-	 */
 	int16_t correction_value = 0;
 
 	if(posDrvRunning){
-		if(posDrvDir == 1){
+		if(posDrvDir == -1){
 			HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_2);
-			correction_value = posDrvDir*((TIM2->CNT) - PULSE_DELAY)/msPerdDegCw;
+			correction_value = posDrvDir*(TIM2->ARR - TIM2->CNT)/msPerdDegCw;
 		}
-		else{
+		else if(posDrvDir == 1){
 			HAL_TIM_PWM_Stop_IT(&htim4, TIM_CHANNEL_2);
-			correction_value = posDrvDir*((TIM4->CNT) - PULSE_DELAY)/msPerdDegCcw;
+			correction_value = posDrvDir*(TIM4->ARR - TIM4->CNT)/msPerdDegCcw;
 		}
 
 		posDrvRunning = RESET;
@@ -47,18 +52,20 @@ int set_pos_posdrv(uint16_t angle_degree){
 	if(deltadDeg == 0) return EXIT_SUCCESS;
 
 	if(deltadDeg > 0){
+		if(endPos) return EXIT_FAILURE;
 		TIM2->CNT = 0;
 		TIM2->CCR2 = PULSE_DELAY;
 		TIM2->ARR = (deltadDeg*msPerdDegCw) + PULSE_DELAY;
-		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-		posDrvDir = 1;
+		HAL_TIM_PWM_Start_IT(&htim2, TIM_CHANNEL_2);
+		posDrvDir = -1;
 	}
 	else {
+		if(startPos) return EXIT_FAILURE;
 		TIM4->CNT = 0;
 		TIM4->CCR2 = PULSE_DELAY;
-		TIM4->ARR = -(deltadDeg*msPerdDegCcw) + PULSE_DELAY;
-		HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
-		posDrvDir = -1;
+		TIM4->ARR = abs(deltadDeg)*msPerdDegCcw + PULSE_DELAY;
+		HAL_TIM_PWM_Start_IT(&htim4, TIM_CHANNEL_2);
+		posDrvDir = 1;
 	}
 
 	actualPosdDeg += deltadDeg;
@@ -68,19 +75,25 @@ int set_pos_posdrv(uint16_t angle_degree){
 	return EXIT_SUCCESS;
 }
 
+
+/**
+ * @brief: Initial homing to get timing values.
+ *
+ * @param: none
+ *
+ * @return: int 0 on success
+ *
+ * @detail: Simple homing is performed first. Drive moves clockwise and then counterclockwise.
+ * Time of both movements is stopped then the movement time for one tenth of a degree is calulated.
+ */
 int init_home_pos_drive(){
 
-	/*Move drive towards SW0 until flag = true, set pos = 0, move towards SW1 until flag = true
-	 * stop time from SW0 to SW1, move back to SW0 stop time from SW1 to SW0.
-	 * Based on timing calc ms per degree (slower time) and calc correction factor (slow/fast)
-	 * TODO test EXTIS for switches SW0 and SW1
-	 */
 	uint16_t cwTimeMs;
 	uint16_t ccwTimeMs;
 
 	home_pos_drive();
 
-	TIM2->ARR = 30000;
+	TIM2->ARR = HOME_TIMEOUT;
 	TIM2->CCR2 = PULSE_DELAY;
 	uint32_t startTime = HAL_GetTick();
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
@@ -92,7 +105,7 @@ int init_home_pos_drive(){
 	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
 	cwTimeMs = HAL_GetTick() - startTime;
 
-	TIM4->ARR = 30000;
+	TIM4->ARR = HOME_TIMEOUT;
 	TIM4->CCR2 = PULSE_DELAY;
 	startTime = HAL_GetTick();
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
@@ -113,11 +126,21 @@ int init_home_pos_drive(){
 	return EXIT_SUCCESS;
 }
 
+/**
+ * @brief: Simple homing to get 0 position.
+ *
+ * @param: none
+ *
+ * @return: int 0 on success
+ *
+ * @detail: Move drive counterclockwise to start position. Used to get the initial position of the drive
+ * either after power up as part of initial homing or after a emergency stop event happened.
+ */
 int home_pos_drive(void){
 
 	if(startPos) return EXIT_SUCCESS;
 
-	TIM4->ARR = 30000;
+	TIM4->ARR = HOME_TIMEOUT;
 	TIM4->CCR2 = PULSE_DELAY;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
 

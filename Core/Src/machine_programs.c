@@ -20,8 +20,6 @@ static uint16_t angle_degree;		//Angle converted to degrees
 static uint16_t last_adc[3];		//Array to store the last valid ADC readings
 static uint32_t last_rand_tick;		//Timestamp when last random value generation takes place
 static uint32_t last_blink_tick;	//Timestamp for blinking LED
-static uint32_t last_angle_change;	//Timestamp for last change of angle target value
-static FlagStatus AngleChanged = RESET; //Set if the target value has changed
 
 /*
  * @brief: this function stops the main Drives and sets the machine in a waiting state
@@ -88,21 +86,7 @@ int pgm_manual(void){
 			set_pwm_maindrv(speed_percent, spin_percent, htim1);
 		}
 
-	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
-		last_adc[2] = adc_result[2];
-		seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
-		seg7_setDispAddr(ANGLE_ADDR);
-		seg7_setBlinkRate(2);
-		AngleChanged = SET;
-		last_angle_change = HAL_GetTick();
-	}
-
-	if(((HAL_GetTick() - last_angle_change) > ANGLE_SET_DELAY) & AngleChanged){
-		seg7_setDispAddr(ANGLE_ADDR);
-		seg7_setBlinkRate(0);
-		set_pos_posdrv(angle_degree);
-		AngleChanged = RESET;
-	}
+	handle_angle_change(adc_result[2], &last_adc[2]);
 
 	if(!mainDrvRunning){
 		HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
@@ -137,23 +121,11 @@ int pgm_auto_speed(void){
 
 	angle_degree = (adc_result[2]*90/MAX_ADC_VALUE);
 
-	if(abs(last_adc[2] - adc_result[2]) > MIN_ANGLE_DELTA){
-		last_adc[2] = adc_result[2];
-		seg7_displayInt((uint16_t) angle_degree, ANGLE_ADDR);
-		seg7_setDispAddr(ANGLE_ADDR);
-		seg7_setBlinkRate(3);
-		last_angle_change = HAL_GetTick();
-	}
-
-	if(HAL_GetTick() - last_angle_change > ANGLE_SET_DELAY){
-			seg7_setDispAddr(ANGLE_ADDR);
-			seg7_setBlinkRate(0);
-			set_pos_posdrv(angle_degree);
-	}
+	handle_angle_change(adc_result[2], &last_adc[2]);
 
 	if((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000){
 
-			uint16_t rand_speed = rand() % 101;
+			uint16_t rand_speed = (rand() % (101 - AUTO_SPEED_MIN)) + AUTO_SPEED_MIN;
 			int16_t rand_spin = (rand() % 101) -50;
 
 			set_pwm_maindrv(rand_speed, rand_spin, htim1);
@@ -163,6 +135,14 @@ int pgm_auto_speed(void){
 
 	return EXIT_SUCCESS;
 }
+
+/*
+ * @brief: this function sets the machine to full auto mode. All parameters are set randomly.
+ *
+ * @param: none
+ *
+ * @returns: int 0 if success
+ */
 
 int pgm_auto(void){
 
@@ -177,7 +157,7 @@ int pgm_auto(void){
 
 	if((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000){
 
-		uint16_t rand_speed = rand() % 101;
+		uint16_t rand_speed = (rand() % (101 - AUTO_SPEED_MIN)) + AUTO_SPEED_MIN;
 		int16_t rand_spin = (rand() % 101) -50;
 		uint16_t rand_angle = rand() % 91;
 
@@ -190,6 +170,14 @@ int pgm_auto(void){
 	return EXIT_SUCCESS;
 }
 
+/*
+ * @brief: read the adc channels 1-3 and writes the value to array
+ *
+ * @param: uint16_t* array size 3 to store ADC readings
+ *
+ * @returns: int 0 on success
+ */
+
 int get_adc_values(uint16_t* adc_result){
 
 	for(int i = 0; i < 3; i++){
@@ -201,7 +189,36 @@ int get_adc_values(uint16_t* adc_result){
 	return EXIT_SUCCESS;
 }
 
-int handle_angle_change(uint16_t adc_result, uint16_t last_adc){
+/*
+ * @brief: handling the angle value if set manually. Repositioning is only triggered when a minimum value change
+ * is exceeded. Afer every change of the value a delay is set until the position changes.
+ *
+ * @param: uint16_t current ADC result
+ *
+ * @param: uint16_t* last set position
+ *
+ * @returns: int 0 on success
+ */
+int handle_angle_change(uint16_t adc_result, uint16_t* last_adc){
+
+	static uint32_t last_angle_change = 0;	//Timestamp for last change of angle target value
+	static FlagStatus AngleChanged = RESET; 	//Set if the target value has changed
+
+	if(abs(*last_adc - adc_result) > MIN_ANGLE_DELTA){
+			*last_adc = adc_result;
+			seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
+			seg7_setDispAddr(ANGLE_ADDR);
+			seg7_setBlinkRate(2);
+			AngleChanged = SET;
+			last_angle_change = HAL_GetTick();
+	}
+
+	if(((HAL_GetTick() - last_angle_change) > ANGLE_SET_DELAY) & AngleChanged){
+		seg7_setDispAddr(ANGLE_ADDR);
+		seg7_setBlinkRate(0);
+		set_pos_posdrv(angle_degree);
+		AngleChanged = RESET;
+	}
 
 	return EXIT_SUCCESS;
 }

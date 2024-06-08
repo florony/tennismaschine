@@ -10,7 +10,7 @@
 ../Core/Src/main.c:636:5:_write	32	static
 ../Core/Src/main.c:645:6:POS_PulseFinishedCallback	16	static
 ../Core/Src/main.c:651:6:HAL_GPIO_EXTI_Callback	16	static,ignoring_inline_asm
-../Core/Src/main.c:684:5:Set_Led_Output	16	static
-../Core/Src/main.c:700:5:Toggle_Led_Output	16	static
-../Core/Src/main.c:709:5:E_Stop_Call	16	static
-../Core/Src/main.c:736:6:Error_Handler	8	static,ignoring_inline_asm
+../Core/Src/main.c:686:5:Set_Led_Output	16	static
+../Core/Src/main.c:702:5:Toggle_Led_Output	16	static
+../Core/Src/main.c:711:5:E_Stop_Call	16	static
+../Core/Src/main.c:738:6:Error_Handler	8	static,ignoring_inline_asm

@@ -63,7 +63,7 @@ FlagStatus eStop = SET;					//State of emergency stop
 FlagStatus startPos = RESET;			//Start position reached
 FlagStatus endPos = RESET;				//End position reached
 
-uint8_t posDrvDir = 0;					//Direction of position drive 1 = CW, -1 = CCW
+uint8_t posDrvDir = 0;					//Direction of position drive -1 = CW, 1 = CCW
 
 /* USER CODE END PV */
 
@@ -658,6 +658,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
   if(GPIO_Pin == SW_1_Pin) {
 	  	  HAL_TIM_PWM_Stop_IT(&htim4, TIM_CHANNEL_2);
+	  	  posDrvRunning = RESET;
 	  	  actualPosdDeg = 0;
 	  	  startPos = !HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);
       } else {
@@ -666,6 +667,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
   if(GPIO_Pin == SW_2_Pin) {
 	  	  HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_2);
+	  	  posDrvRunning = RESET;
 	  	  actualPosdDeg = 900;
 	  	  endPos = !HAL_GPIO_ReadPin(SW_2_GPIO_Port, SW_2_Pin);
     } else {

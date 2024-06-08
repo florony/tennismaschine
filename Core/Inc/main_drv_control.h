@@ -11,6 +11,9 @@
 #ifndef INC_PWM_MAIN_DRV_H_
 #define INC_PWM_MAIN_DRV_H_
 
+#define MAIN_DRV_MIN_DUTY 15
+#define MAIN_DRV_MAX_DUTY 90
+
 int set_pwm_maindrv(uint16_t speed_percent, int16_t spin_percent, TIM_HandleTypeDef htim);
 
 int calc_drv_dutycycle(

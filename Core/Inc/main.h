@@ -132,18 +132,7 @@ int Toggle_Led_Output(uint8_t);
 #define GREEN ((uint8_t) 1 << 0)
 #define OFF ((uint8_t) 0)
 #define BLINK_INT_MS 1000
-#define BLINK_DISP_DELAY 2000
-
-#define SPIN_FACTOR 100 // NOT YET IN USE
-#define STEPS_PER_DEGREE 10
-#define POS_DRV_DIR_POLARITY 0
-#define POS_DRV_SLOW_FREQ 2
-#define POS_DRV_FAST_FREQ 10
-#define POS_DRV_PERIOD(f, presc, clk) (clk/presc/f)
 #define MAIN_DRV_DIR_POLARITY 1
-#define MAIN_DRV_MIN_DUTY 15
-#define MAIN_DRV_MAX_DUTY 90
-#define AUTO_DELAY 10
 
 /* USER CODE END Private defines */
 
