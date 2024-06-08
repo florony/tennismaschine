@@ -140,13 +140,10 @@ int Toggle_Led_Output(uint8_t);
 #define POS_DRV_SLOW_FREQ 2
 #define POS_DRV_FAST_FREQ 10
 #define POS_DRV_PERIOD(f, presc, clk) (clk/presc/f)
-#define MIN_ANGLE_DELTA 50
-#define MIN_SPEED_DELTA 50
 #define MAIN_DRV_DIR_POLARITY 1
 #define MAIN_DRV_MIN_DUTY 15
 #define MAIN_DRV_MAX_DUTY 90
 #define AUTO_DELAY 10
-#define MAX_ADC_VALUE 4022
 
 /* USER CODE END Private defines */
 

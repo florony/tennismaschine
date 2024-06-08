@@ -55,15 +55,15 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
-FlagStatus mainDrvRunning = RESET;	//State of both main drives
-FlagStatus posDrvRunning = RESET;	//State of DC drive
+FlagStatus mainDrvRunning = RESET;		//State of both main drives
+FlagStatus posDrvRunning = RESET;		//State of DC position drive
 FlagStatus initHomingComplete = RESET;	//Reset if initial homing is needed
-FlagStatus homingComplete = RESET;	//Reset if simple homing is needed
-FlagStatus eStop = SET;				//State of emergency stop
-FlagStatus startPos = RESET;		//Start position reached
-FlagStatus endPos = RESET;			//End position reached
+FlagStatus homingComplete = RESET;		//Reset if simple homing is needed
+FlagStatus eStop = SET;					//State of emergency stop
+FlagStatus startPos = RESET;			//Start position reached
+FlagStatus endPos = RESET;				//End position reached
 
-uint8_t posDrvDir = 0;				//Direction of pos drive 1 = CW, -1 = CCW
+uint8_t posDrvDir = 0;					//Direction of position drive 1 = CW, -1 = CCW
 
 /* USER CODE END PV */
 
@@ -127,8 +127,8 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_TIM_RegisterCallback(&htim2, HAL_TIM_PERIOD_ELAPSED_CB_ID, POS_PulseFinishedCallback);
-  HAL_TIM_RegisterCallback(&htim4, HAL_TIM_PERIOD_ELAPSED_CB_ID, POS_PulseFinishedCallback);
+  HAL_TIM_RegisterCallback(&htim2, HAL_TIM_PWM_PULSE_FINISHED_CB_ID, POS_PulseFinishedCallback);
+  HAL_TIM_RegisterCallback(&htim4, HAL_TIM_PWM_PULSE_FINISHED_CB_ID, POS_PulseFinishedCallback);
 
   seg7_init(SPEED_ADDR);
   seg7_init(SPIN_ADDR);
@@ -138,15 +138,15 @@ int main(void)
   HAL_GPIO_WritePin(TDRV_DIR_GPIO_Port, TDRV_DIR_Pin, MAIN_DRV_DIR_POLARITY ? GPIO_PIN_SET : GPIO_PIN_RESET);
   HAL_GPIO_WritePin(BDRV_DIR_GPIO_Port, BDRV_DIR_Pin, MAIN_DRV_DIR_POLARITY ? GPIO_PIN_RESET : GPIO_PIN_SET);
 
-  eStop = !HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin); //Get initial state of emergency stop
-  startPos = !HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);
-  endPos = !HAL_GPIO_ReadPin(SW_2_GPIO_Port, SW_2_Pin);
+  eStop = !HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin); 	//Get initial state of emergency stop
+  startPos = !HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);	//Check if start position is reached
+  endPos = !HAL_GPIO_ReadPin(SW_2_GPIO_Port, SW_2_Pin);		//Check if end position is reached
 
   Set_Led_Output(YELLOW);
 
   uint8_t pgm_state = 0;
 
-  srand(time(NULL)); //Seed the random int generator for auto programms
+  srand(time(NULL)); //Seed the random int generator for auto programs
 
   /* USER CODE END 2 */
 
@@ -187,6 +187,9 @@ int main(void)
 		break;
 	case 4:
 		pgm_auto();
+		break;
+	default:
+		pgm_stop();
 		break;
 	}
 

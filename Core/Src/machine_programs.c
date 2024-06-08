@@ -20,9 +20,16 @@ static uint16_t angle_degree;		//Angle converted to degrees
 static uint16_t last_adc[3];		//Array to store the last valid ADC readings
 static uint32_t last_rand_tick;		//Timestamp when last random value generation takes place
 static uint32_t last_blink_tick;	//Timestamp for blinking LED
+static uint32_t last_angle_change;	//Timestamp for last change of angle target value
+static FlagStatus AngleChanged = RESET; //Set if the target value has changed
 
-uint32_t last_angle_change;
-FlagStatus AngleChanged = RESET;
+/*
+ * @brief: this function stops the main Drives and sets the machine in a waiting state
+ *
+ * @param: none
+ *
+ * @returns: int 0 = success
+ */
 
 int pgm_stop(void){
 
@@ -49,6 +56,16 @@ int pgm_stop(void){
 	return EXIT_SUCCESS;
 }
 
+/*
+ * @brief: this function handles the manual mode. Speed,Spin an Angle are controlled via potis.
+ * the function reads the ADC values, converts them in real world values and trigger setup functions if needed.
+ * HMI related functions are placed here.
+ *
+ * @param: none
+ *
+ * @returns: int 0 if success
+ */
+
 int pgm_manual(void){
 
 	Set_Led_Output(GREEN);
@@ -67,7 +84,7 @@ int pgm_manual(void){
 			last_adc[0] = adc_result[0];
 			last_adc[1] = adc_result[1];
 			seg7_displayInt((int16_t)speed_percent, SPEED_ADDR);
-			seg7_displayInt((int16_t)spin_percent, SPIN_ADDR);
+			seg7_displayInt(spin_percent, SPIN_ADDR);
 			set_pwm_maindrv(speed_percent, spin_percent, htim1);
 		}
 
@@ -75,10 +92,9 @@ int pgm_manual(void){
 		last_adc[2] = adc_result[2];
 		seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
 		seg7_setDispAddr(ANGLE_ADDR);
-		seg7_setBlinkRate(3);
+		seg7_setBlinkRate(2);
 		AngleChanged = SET;
 		last_angle_change = HAL_GetTick();
-
 	}
 
 	if(((HAL_GetTick() - last_angle_change) > ANGLE_SET_DELAY) & AngleChanged){
@@ -97,6 +113,15 @@ int pgm_manual(void){
 
 	return EXIT_SUCCESS;
 }
+
+/*
+ * @brief: this function sets the machine to auto speed mode. Speed an Spin are changed based on a random
+ * number. Angle is controlled manually. All HMI related function are located here.
+ *
+ * @parm: none
+ *
+ * @returns: int 0 if success
+ */
 
 int pgm_auto_speed(void){
 
@@ -172,6 +197,11 @@ int get_adc_values(uint16_t* adc_result){
 			HAL_ADC_PollForConversion(&hadc1, 1);
 			adc_result[i] = HAL_ADC_GetValue(&hadc1);
 		}
+
+	return EXIT_SUCCESS;
+}
+
+int handle_angle_change(uint16_t adc_result, uint16_t last_adc){
 
 	return EXIT_SUCCESS;
 }

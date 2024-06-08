@@ -1,5 +1,6 @@
-../Core/Src/machine_programs.c:27:5:pgm_stop	16	static
-../Core/Src/machine_programs.c:52:5:pgm_manual	200	static
-../Core/Src/machine_programs.c:101:5:pgm_auto_speed	208	static
-../Core/Src/machine_programs.c:142:5:pgm_auto	216	static
-../Core/Src/machine_programs.c:168:5:get_adc_values	24	static
+../Core/Src/machine_programs.c:34:5:pgm_stop	16	static
+../Core/Src/machine_programs.c:69:5:pgm_manual	200	static
+../Core/Src/machine_programs.c:126:5:pgm_auto_speed	208	static
+../Core/Src/machine_programs.c:167:5:pgm_auto	216	static
+../Core/Src/machine_programs.c:193:5:get_adc_values	24	static
+../Core/Src/machine_programs.c:204:5:handle_angle_change	16	static

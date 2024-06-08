@@ -80,7 +80,7 @@ int init_home_pos_drive(){
 
 	home_pos_drive();
 
-	TIM2->ARR = 20000;
+	TIM2->ARR = 30000;
 	TIM2->CCR2 = PULSE_DELAY;
 	uint32_t startTime = HAL_GetTick();
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
@@ -92,7 +92,7 @@ int init_home_pos_drive(){
 	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
 	cwTimeMs = HAL_GetTick() - startTime;
 
-	TIM4->ARR = 20000;
+	TIM4->ARR = 30000;
 	TIM4->CCR2 = PULSE_DELAY;
 	startTime = HAL_GetTick();
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
@@ -117,7 +117,7 @@ int home_pos_drive(void){
 
 	if(startPos) return EXIT_SUCCESS;
 
-	TIM4->ARR = 20000;
+	TIM4->ARR = 30000;
 	TIM4->CCR2 = PULSE_DELAY;
 	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
 
@@ -126,6 +126,7 @@ int home_pos_drive(void){
 	}
 
 	HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
+	TIM4->CNT = 0;
 	actualPosdDeg = 0;
 	homingComplete = SET;
 
