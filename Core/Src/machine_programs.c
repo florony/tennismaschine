@@ -18,8 +18,8 @@ static uint16_t speed_percent;		//Speed converted to percent
 static int16_t spin_percent;		//Spin converted to percent
 static uint16_t angle_degree;		//Angle converted to degrees
 static uint16_t last_adc[3];		//Array to store the last valid ADC readings
-static uint32_t last_rand_tick;		//Timestamp when last random value generation takes place
-static uint32_t last_blink_tick;	//Timestamp for blinking LED
+static uint32_t last_rand_tick = 0;		//Timestamp when last random value generation takes place
+static uint32_t last_blink_tick = 0;	//Timestamp for blinking LED
 
 /*
  * @brief: this function stops the main Drives and sets the machine in a waiting state
@@ -77,7 +77,8 @@ int pgm_manual(void){
 
 	if(
 		(abs(last_adc[0] - adc_result[0]) > MIN_SPEED_DELTA) |
-		(abs(last_adc[1] - adc_result[1]) > MIN_SPEED_DELTA)){
+		(abs(last_adc[1] - adc_result[1]) > MIN_SPEED_DELTA) |
+		pgmChanged){
 
 			last_adc[0] = adc_result[0];
 			last_adc[1] = adc_result[1];
@@ -204,7 +205,9 @@ int handle_angle_change(uint16_t adc_result, uint16_t* last_adc){
 	static uint32_t last_angle_change = 0;	//Timestamp for last change of angle target value
 	static FlagStatus AngleChanged = RESET; 	//Set if the target value has changed
 
-	if(abs(*last_adc - adc_result) > MIN_ANGLE_DELTA){
+	if(
+		(abs(*last_adc - adc_result) > MIN_ANGLE_DELTA) |
+		pgmChanged){
 			*last_adc = adc_result;
 			seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
 			seg7_setDispAddr(ANGLE_ADDR);

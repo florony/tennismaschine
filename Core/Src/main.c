@@ -56,14 +56,14 @@ TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
 FlagStatus mainDrvRunning = RESET;		//State of both main drives
-FlagStatus posDrvRunning = RESET;		//State of DC position drive
 FlagStatus initHomingComplete = RESET;	//Reset if initial homing is needed
 FlagStatus homingComplete = RESET;		//Reset if simple homing is needed
 FlagStatus eStop = SET;					//State of emergency stop
 FlagStatus startPos = RESET;			//Start position reached
 FlagStatus endPos = RESET;				//End position reached
+FlagStatus pgmChanged = SET;
 
-uint8_t posDrvDir = 0;					//Direction of position drive -1 = CW, 1 = CCW
+int8_t posDrvDir = 0;					//Direction of position drive -1 = CW, 1 = CCW
 
 /* USER CODE END PV */
 
@@ -127,9 +127,6 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_TIM_RegisterCallback(&htim2, HAL_TIM_PWM_PULSE_FINISHED_CB_ID, POS_PulseFinishedCallback);
-  HAL_TIM_RegisterCallback(&htim4, HAL_TIM_PWM_PULSE_FINISHED_CB_ID, POS_PulseFinishedCallback);
-
   seg7_init(SPEED_ADDR);
   seg7_init(SPIN_ADDR);
   seg7_init(ANGLE_ADDR);
@@ -145,6 +142,7 @@ int main(void)
   Set_Led_Output(YELLOW);
 
   uint8_t pgm_state = 0;
+  uint8_t prevPgmState = 0;				//Previous program state
 
   srand(time(NULL)); //Seed the random int generator for auto programs
 
@@ -165,7 +163,7 @@ int main(void)
 		Set_Led_Output(GREEN);
 	}
 
-	pgm_state = 0;
+	prevPgmState = pgm_state;
 
 	/*The mode switch is read as bitpattern PGM_1_Pin = LSB PGM_3_Pin = MSB
 	 *if pattern is not valid, machine turns of --> pgm_stop
@@ -174,6 +172,8 @@ int main(void)
 			(!HAL_GPIO_ReadPin(GPIOC ,PGM_1_Pin) << 0)|
 			(!HAL_GPIO_ReadPin(GPIOC ,PGM_2_Pin) << 1)|
 			(!HAL_GPIO_ReadPin(GPIOC ,PGM_3_Pin) << 2);
+
+	(prevPgmState == pgm_state) ? (pgmChanged = RESET) : (pgmChanged = SET);
 
 	switch(pgm_state){
 	case 0:
@@ -641,35 +641,37 @@ int _write(int file, char *ptr, int len)
   return len;
 }
 
-/*Callback after pulse finished*/
-void POS_PulseFinishedCallback(TIM_HandleTypeDef *htim)
-{
-	posDrvRunning = RESET;
-}
-
-
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if(GPIO_Pin == E_STOP_Pin) {
-    eStop = SET;
+	eStop = SET;
+	/*
+	HAL_Delay(DEBOUNCE_TIME);
+	if(!HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin)){
+		eStop = SET;
+	}*/
   } else {
       __NOP();
   }
 
   if(GPIO_Pin == SW_1_Pin) {
-	  	  HAL_TIM_PWM_Stop_IT(&htim4, TIM_CHANNEL_2);
-	  	  posDrvRunning = RESET;
-	  	  actualPosdDeg = 0;
 	  	  startPos = !HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);
+	  	  if(startPos) {
+	  		  HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
+	  		  actualPosdDeg = 0;
+	  	  }
+
       } else {
           __NOP();
       }
 
   if(GPIO_Pin == SW_2_Pin) {
-	  	  HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_2);
-	  	  posDrvRunning = RESET;
-	  	  actualPosdDeg = 900;
 	  	  endPos = !HAL_GPIO_ReadPin(SW_2_GPIO_Port, SW_2_Pin);
+	  	  if(endPos){
+	  		  HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+	  		  actualPosdDeg = 900;
+	  	  }
+
     } else {
         __NOP();
     }

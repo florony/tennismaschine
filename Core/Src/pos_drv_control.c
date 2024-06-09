@@ -33,17 +33,23 @@ int set_pos_posdrv(uint16_t angle_degree){
 
 	int16_t correction_value = 0;
 
-	if(posDrvRunning){
-		if(posDrvDir == -1){
-			HAL_TIM_PWM_Stop_IT(&htim2, TIM_CHANNEL_2);
+	if(posDrvDir == -1){
+		if(TIM2->CNT != 0){
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
 			correction_value = posDrvDir*(TIM2->ARR - TIM2->CNT)/msPerdDegCw;
 		}
-		else if(posDrvDir == 1){
-			HAL_TIM_PWM_Stop_IT(&htim4, TIM_CHANNEL_2);
+		else {
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+		}
+	}
+	else if(posDrvDir == 1){
+		if(TIM4->CNT != 0){
+			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
 			correction_value = posDrvDir*(TIM4->ARR - TIM4->CNT)/msPerdDegCcw;
 		}
-
-		posDrvRunning = RESET;
+		else{
+			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
+		}
 	}
 
 	actualPosdDeg += correction_value;
@@ -56,7 +62,7 @@ int set_pos_posdrv(uint16_t angle_degree){
 		TIM2->CNT = 0;
 		TIM2->CCR2 = PULSE_DELAY;
 		TIM2->ARR = (deltadDeg*msPerdDegCw) + PULSE_DELAY;
-		HAL_TIM_PWM_Start_IT(&htim2, TIM_CHANNEL_2);
+		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 		posDrvDir = -1;
 	}
 	else {
@@ -64,13 +70,11 @@ int set_pos_posdrv(uint16_t angle_degree){
 		TIM4->CNT = 0;
 		TIM4->CCR2 = PULSE_DELAY;
 		TIM4->ARR = abs(deltadDeg)*msPerdDegCcw + PULSE_DELAY;
-		HAL_TIM_PWM_Start_IT(&htim4, TIM_CHANNEL_2);
+		HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
 		posDrvDir = 1;
 	}
 
 	actualPosdDeg += deltadDeg;
-
-	posDrvRunning = SET;
 
 	return EXIT_SUCCESS;
 }
@@ -138,7 +142,10 @@ int init_home_pos_drive(){
  */
 int home_pos_drive(void){
 
-	if(startPos) return EXIT_SUCCESS;
+	if(startPos){
+		homingComplete = SET;
+		return EXIT_SUCCESS;
+	}
 
 	TIM4->ARR = HOME_TIMEOUT;
 	TIM4->CCR2 = PULSE_DELAY;

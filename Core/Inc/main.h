@@ -44,10 +44,10 @@ extern FlagStatus mainDrvRunning;
 extern I2C_HandleTypeDef hi2c2;
 extern FlagStatus homingComplete;
 extern FlagStatus initHomingComplete;
-extern FlagStatus posDrvRunning;
 extern FlagStatus endPos;
 extern FlagStatus startPos;
-extern uint8_t posDrvDir;
+extern FlagStatus pgmChanged;
+extern int8_t posDrvDir;
 
 /* USER CODE END ET */
 
@@ -133,6 +133,7 @@ int Toggle_Led_Output(uint8_t);
 #define OFF ((uint8_t) 0)
 #define BLINK_INT_MS 1000
 #define MAIN_DRV_DIR_POLARITY 1
+#define DEBOUNCE_TIME 100
 
 /* USER CODE END Private defines */
 
