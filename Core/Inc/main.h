@@ -47,7 +47,6 @@ extern FlagStatus initHomingComplete;
 extern FlagStatus endPos;
 extern FlagStatus startPos;
 extern FlagStatus pgmChanged;
-extern int8_t posDrvDir;
 
 /* USER CODE END ET */
 

@@ -63,8 +63,6 @@ FlagStatus startPos = RESET;			//Start position reached
 FlagStatus endPos = RESET;				//End position reached
 FlagStatus pgmChanged = SET;
 
-int8_t posDrvDir = 0;					//Direction of position drive -1 = CW, 1 = CCW
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -658,6 +656,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  	  startPos = !HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);
 	  	  if(startPos) {
 	  		  HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
+	  		  TIM4->CNT = 0;
 	  		  actualPosdDeg = 0;
 	  	  }
 
@@ -669,6 +668,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	  	  endPos = !HAL_GPIO_ReadPin(SW_2_GPIO_Port, SW_2_Pin);
 	  	  if(endPos){
 	  		  HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+	  		  TIM2->CNT = 0;
 	  		  actualPosdDeg = 900;
 	  	  }
 

@@ -13,6 +13,12 @@
 #include "main.h"
 #include "pos_drv_control.h"
 
+enum drvDir {
+	stop = 0,
+	cw = -1,
+	ccw = 1
+};
+
 int16_t actualPosdDeg;			//Actual position of drive in decaDeg, relative to home
 static uint16_t msPerdDegCw;	//Milliseconds per decaDeg for clockwise side
 static uint16_t msPerdDegCcw;	//Milliseconds per decaDeg for counterclockwise side
@@ -31,24 +37,21 @@ static uint16_t msPerdDegCcw;	//Milliseconds per decaDeg for counterclockwise si
 
 int set_pos_posdrv(uint16_t angle_degree){
 
+	static enum drvDir posDrvDir = stop;
 	int16_t correction_value = 0;
 
-	if(posDrvDir == -1){
+	if(posDrvDir == cw){
+		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
 		if(TIM2->CNT != 0){
-			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-			correction_value = posDrvDir*(TIM2->ARR - TIM2->CNT)/msPerdDegCw;
-		}
-		else {
-			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+			correction_value = posDrvDir*(int16_t)((TIM2->ARR - TIM2->CNT)/msPerdDegCw);
+			TIM2->CNT = 0;
 		}
 	}
-	else if(posDrvDir == 1){
+	else if(posDrvDir == ccw){
+		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
 		if(TIM4->CNT != 0){
-			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
-			correction_value = posDrvDir*(TIM4->ARR - TIM4->CNT)/msPerdDegCcw;
-		}
-		else{
-			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
+			correction_value = posDrvDir*(int16_t)((TIM4->ARR - TIM4->CNT)/msPerdDegCcw);
+			TIM4->CNT = 0;
 		}
 	}
 
@@ -63,7 +66,7 @@ int set_pos_posdrv(uint16_t angle_degree){
 		TIM2->CCR2 = PULSE_DELAY;
 		TIM2->ARR = (deltadDeg*msPerdDegCw) + PULSE_DELAY;
 		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-		posDrvDir = -1;
+		posDrvDir = cw;
 	}
 	else {
 		if(startPos) return EXIT_FAILURE;
@@ -71,7 +74,7 @@ int set_pos_posdrv(uint16_t angle_degree){
 		TIM4->CCR2 = PULSE_DELAY;
 		TIM4->ARR = abs(deltadDeg)*msPerdDegCcw + PULSE_DELAY;
 		HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
-		posDrvDir = 1;
+		posDrvDir = ccw;
 	}
 
 	actualPosdDeg += deltadDeg;
@@ -143,6 +146,7 @@ int init_home_pos_drive(){
 int home_pos_drive(void){
 
 	if(startPos){
+		actualPosdDeg = 0;
 		homingComplete = SET;
 		return EXIT_SUCCESS;
 	}
