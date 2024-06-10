@@ -152,11 +152,17 @@ int main(void)
   {
 	if(eStop) E_Stop_Call(); //Call emergency stop routine
 
+	uint8_t text_pos[] = {SEG7_P, SEG7_0, SEG7_5, SEG7_SPACE};
+
 	if(initHomingComplete == RESET){
+		seg7_displayOnOffMulti(SPEED);
+		seg7_display(text_pos, SPEED_ADDR);
 		init_home_pos_drive();
 		Set_Led_Output(GREEN);
 	}
 	else if (homingComplete == RESET){
+		seg7_displayOnOffMulti(SPEED);
+		seg7_display(text_pos, SPEED_ADDR);
 		home_pos_drive();
 		Set_Led_Output(GREEN);
 	}

@@ -216,7 +216,7 @@ int handle_angle_change(uint16_t adc_result, uint16_t* last_adc){
 			*last_adc = adc_result;
 			seg7_displayInt((int16_t)angle_degree, ANGLE_ADDR);
 			seg7_setDispAddr(ANGLE_ADDR);
-			seg7_setBlinkRate(3);
+			seg7_setBlinkRate(1);
 			AngleChanged = SET;
 			last_angle_change = HAL_GetTick();
 	}
