@@ -44,6 +44,7 @@ extern FlagStatus mainDrvRunning;
 extern I2C_HandleTypeDef hi2c2;
 extern FlagStatus homingComplete;
 extern FlagStatus initHomingComplete;
+extern FlagStatus eStop;
 extern FlagStatus endPos;
 extern FlagStatus startPos;
 extern FlagStatus pgmChanged;
@@ -82,14 +83,12 @@ int Toggle_Led_Output(uint8_t);
 #define POS_CW_GPIO_Port GPIOA
 #define SW_1_Pin GPIO_PIN_4
 #define SW_1_GPIO_Port GPIOA
-#define SW_1_EXTI_IRQn EXTI4_IRQn
 #define LED_RED_Pin GPIO_PIN_7
 #define LED_RED_GPIO_Port GPIOA
 #define Input_1_Pin GPIO_PIN_5
 #define Input_1_GPIO_Port GPIOC
 #define SW_2_Pin GPIO_PIN_0
 #define SW_2_GPIO_Port GPIOB
-#define SW_2_EXTI_IRQn EXTI0_IRQn
 #define BDRV_FAIL_Pin GPIO_PIN_6
 #define BDRV_FAIL_GPIO_Port GPIOC
 #define TDRV_FAIL_Pin GPIO_PIN_8
@@ -116,7 +115,6 @@ int Toggle_Led_Output(uint8_t);
 #define TDRV_DIR_GPIO_Port GPIOB
 #define E_STOP_Pin GPIO_PIN_9
 #define E_STOP_GPIO_Port GPIOB
-#define E_STOP_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
 #define ADC_BASE_REG 0x40012400
@@ -132,7 +130,8 @@ int Toggle_Led_Output(uint8_t);
 #define OFF ((uint8_t) 0)
 #define BLINK_INT_MS 1000
 #define MAIN_DRV_DIR_POLARITY 1
-#define DEBOUNCE_TIME 100
+#define DEBOUNCE_CHECK 5
+#define ES_DEBOUNCE_CHECK 100
 
 /* USER CODE END Private defines */
 

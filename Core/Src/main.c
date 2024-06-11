@@ -52,6 +52,7 @@ I2C_HandleTypeDef hi2c2;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
@@ -62,6 +63,12 @@ FlagStatus eStop = SET;					//State of emergency stop
 FlagStatus startPos = RESET;			//Start position reached
 FlagStatus endPos = RESET;				//End position reached
 FlagStatus pgmChanged = SET;
+FlagStatus SW1PrevState = RESET;
+FlagStatus SW2PrevState = RESET;
+FlagStatus EStopPrevState = RESET;
+uint16_t SW1Count = 0;
+uint16_t SW2Count = 0;
+uint16_t EStopCount = 0;
 
 /* USER CODE END PV */
 
@@ -73,8 +80,9 @@ static void MX_I2C2_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
-void POS_PulseFinishedCallback(TIM_HandleTypeDef *htim);
+void CheckSWCallback(TIM_HandleTypeDef *htim);
 
 int E_Stop_Call(void);
 
@@ -123,11 +131,14 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM4_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
   seg7_init(SPEED_ADDR);
   seg7_init(SPIN_ADDR);
   seg7_init(ANGLE_ADDR);
+
+  HAL_TIM_RegisterCallback(&htim3, HAL_TIM_PERIOD_ELAPSED_CB_ID, CheckSWCallback);
 
   //Set position signal of main drives
   HAL_GPIO_WritePin(TDRV_DIR_GPIO_Port, TDRV_DIR_Pin, MAIN_DRV_DIR_POLARITY ? GPIO_PIN_SET : GPIO_PIN_RESET);
@@ -136,6 +147,8 @@ int main(void)
   eStop = !HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin); 	//Get initial state of emergency stop
   startPos = !HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);	//Check if start position is reached
   endPos = !HAL_GPIO_ReadPin(SW_2_GPIO_Port, SW_2_Pin);		//Check if end position is reached
+
+  HAL_TIM_Base_Start_IT(&htim3);
 
   Set_Led_Output(YELLOW);
 
@@ -150,10 +163,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-	eStop = !HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin);
-	//
-	if(eStop) E_Stop_Call(); //Call emergency stop routine
+	//if(eStop) E_Stop_Call(); //Call emergency stop routine
 
 	uint8_t text_pos[] = {SEG7_P, SEG7_0, SEG7_5, SEG7_SPACE};
 
@@ -168,6 +178,16 @@ int main(void)
 		seg7_display(text_pos, SPEED_ADDR);
 		home_pos_drive();
 		Set_Led_Output(GREEN);
+	}
+
+	if(startPos){
+		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
+		TIM4->CNT = 0;
+	}
+
+	if(endPos){
+		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+		TIM2->CNT = 0;
 	}
 
 	prevPgmState = pgm_state;
@@ -493,6 +513,51 @@ static void MX_TIM2_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 7000;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 10;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+
+}
+
+/**
   * @brief TIM4 Initialization Function
   * @param None
   * @retval None
@@ -580,7 +645,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : SW_1_Pin */
   GPIO_InitStruct.Pin = SW_1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(SW_1_GPIO_Port, &GPIO_InitStruct);
 
@@ -601,7 +666,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : SW_2_Pin */
   GPIO_InitStruct.Pin = SW_2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(SW_2_GPIO_Port, &GPIO_InitStruct);
 
@@ -621,19 +686,9 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : E_STOP_Pin */
   GPIO_InitStruct.Pin = E_STOP_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(E_STOP_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 
@@ -648,39 +703,6 @@ int _write(int file, char *ptr, int len)
   return len;
 }
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  /*if(GPIO_Pin == E_STOP_Pin) {
-	eStop = SET;
-  } else {
-      __NOP();
-  }*/
-
-  if(GPIO_Pin == SW_1_Pin) {
-	  	  startPos = !HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);
-	  	  if(startPos) {
-	  		  HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
-	  		  TIM4->CNT = 0;
-	  		  actualPosdDeg = 0;
-	  	  }
-
-      } else {
-          __NOP();
-      }
-
-  if(GPIO_Pin == SW_2_Pin) {
-	  	  endPos = !HAL_GPIO_ReadPin(SW_2_GPIO_Port, SW_2_Pin);
-	  	  if(endPos){
-	  		  HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-	  		  TIM2->CNT = 0;
-	  		  actualPosdDeg = 900;
-	  	  }
-
-    } else {
-        __NOP();
-    }
-}
-
 /*
  * @brief: helper function to set the LEDs.
  *
@@ -689,6 +711,55 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
  * 			1 = on, 0 = off
  * @return: 0 on success
  */
+
+void CheckSWCallback(TIM_HandleTypeDef *htim){
+
+	volatile uint8_t SW1_State = HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);
+	volatile uint8_t SW2_State = HAL_GPIO_ReadPin(SW_2_GPIO_Port, SW_2_Pin);
+	volatile uint8_t EStop_State = HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin);
+
+	if(SW1_State == SW1PrevState){
+		SW1Count++;
+		if(SW1Count == DEBOUNCE_CHECK){
+			startPos = !SW1_State;
+			if(startPos) actualPosdDeg = 0;
+		}
+	}
+	else
+	{
+		SW1Count = 0;
+	}
+
+	SW1PrevState = SW1_State;
+
+	if(SW2_State == SW2PrevState){
+		SW2Count++;
+		if(SW2Count == DEBOUNCE_CHECK){
+			endPos = !SW2_State;
+			if(endPos) actualPosdDeg = 900;
+		}
+	}
+	else
+	{
+		SW2Count = 0;
+	}
+
+	SW2PrevState = SW2_State;
+
+	if(EStop_State == EStopPrevState){
+		EStopCount++;
+		if(EStopCount == ES_DEBOUNCE_CHECK){
+			eStop = !EStop_State;
+		}
+	}
+	else
+	{
+		EStopCount = 0;
+	}
+
+	EStopPrevState = EStop_State;
+}
+
 int Set_Led_Output(uint8_t led_mask){
 	HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, led_mask & RED);
 	HAL_GPIO_WritePin(LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, led_mask & YELLOW);

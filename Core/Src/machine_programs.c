@@ -172,6 +172,8 @@ int pgm_auto(void){
 		uint16_t rand_angle = rand() % 91;
 
 		set_pwm_maindrv(rand_speed, rand_spin, htim1);
+		HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+		HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
 		set_pos_posdrv(rand_angle);
 
 		last_rand_tick = HAL_GetTick();

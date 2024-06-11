@@ -15,8 +15,8 @@
 
 enum drvDir {
 	stop = 0,
-	cw = -1,
-	ccw = 1
+	cw = 1,
+	ccw = -1
 };
 
 int16_t actualPosdDeg;			//Actual position of drive in decaDeg, relative to home
@@ -38,25 +38,26 @@ static uint16_t msPerdDegCcw;	//Milliseconds per decaDeg for counterclockwise si
 int set_pos_posdrv(uint16_t angle_degree){
 
 	static enum drvDir posDrvDir = stop;
-	int16_t correction_value = 0;
+	static int16_t lastPosdDeg = 0;
 
 	if(posDrvDir == cw){
 		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
 		if(TIM2->CNT != 0){
-			correction_value = posDrvDir*(int16_t)((TIM2->ARR - TIM2->CNT)/msPerdDegCw);
+			actualPosdDeg = lastPosdDeg + (int16_t)((TIM2->CNT - PULSE_DELAY)/msPerdDegCw);
 			TIM2->CNT = 0;
 		}
 	}
 	else if(posDrvDir == ccw){
 		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_2);
 		if(TIM4->CNT != 0){
-			correction_value = posDrvDir*(int16_t)((TIM4->ARR - TIM4->CNT)/msPerdDegCcw);
+			actualPosdDeg = lastPosdDeg - (int16_t)((TIM4->CNT - PULSE_DELAY)/msPerdDegCcw);
 			TIM4->CNT = 0;
 		}
 	}
 
-	actualPosdDeg += correction_value;
 	int16_t deltadDeg = (angle_degree*10) - actualPosdDeg;
+	if(angle_degree < 1) deltadDeg = -1000;
+	if(angle_degree > 89) deltadDeg = 1000;
 
 	if(deltadDeg == 0) return EXIT_SUCCESS;
 
@@ -77,6 +78,7 @@ int set_pos_posdrv(uint16_t angle_degree){
 		posDrvDir = ccw;
 	}
 
+	lastPosdDeg = actualPosdDeg;
 	actualPosdDeg += deltadDeg;
 
 	return EXIT_SUCCESS;
