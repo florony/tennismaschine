@@ -12,7 +12,7 @@
 #define MIN_ANGLE_DELTA 70
 #define MIN_SPEED_DELTA 50
 #define MAX_ADC_VALUE 4022
-#define AUTO_DELAY 10
+#define AUTO_DELAY (uint16_t) 10
 #define AUTO_SPEED_MIN 20
 
 int home_pos_drive(void);

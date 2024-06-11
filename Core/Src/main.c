@@ -150,6 +150,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+	eStop = !HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin);
+	//
 	if(eStop) E_Stop_Call(); //Call emergency stop routine
 
 	uint8_t text_pos[] = {SEG7_P, SEG7_0, SEG7_5, SEG7_SPACE};
@@ -647,16 +650,11 @@ int _write(int file, char *ptr, int len)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  if(GPIO_Pin == E_STOP_Pin) {
+  /*if(GPIO_Pin == E_STOP_Pin) {
 	eStop = SET;
-	/*
-	HAL_Delay(DEBOUNCE_TIME);
-	if(!HAL_GPIO_ReadPin(E_STOP_GPIO_Port, E_STOP_Pin)){
-		eStop = SET;
-	}*/
   } else {
       __NOP();
-  }
+  }*/
 
   if(GPIO_Pin == SW_1_Pin) {
 	  	  startPos = !HAL_GPIO_ReadPin(SW_1_GPIO_Port, SW_1_Pin);

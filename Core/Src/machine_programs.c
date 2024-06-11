@@ -18,8 +18,8 @@ static uint16_t speed_percent;		//Speed converted to percent
 static int16_t spin_percent;		//Spin converted to percent
 static uint16_t angle_degree;		//Angle converted to degrees
 static uint16_t last_adc[3];		//Array to store the last valid ADC readings
-static uint32_t last_rand_tick = 0;		//Timestamp when last random value generation takes place
-static uint32_t last_blink_tick = 0;	//Timestamp for blinking LED
+static volatile uint32_t last_rand_tick = 0;		//Timestamp when last random value generation takes place
+static volatile uint32_t last_blink_tick = 0;	//Timestamp for blinking LED
 
 /*
  * @brief: this function stops the main Drives and sets the machine in a waiting state
@@ -127,12 +127,15 @@ int pgm_auto_speed(void){
 
 	handle_angle_change(adc_result[2], &last_adc[2]);
 
-	if((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000){
+	if(((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000) |
+			pgmChanged){
 
 			uint16_t rand_speed = (rand() % (101 - AUTO_SPEED_MIN)) + AUTO_SPEED_MIN;
 			int16_t rand_spin = (rand() % 101) -50;
 
 			set_pwm_maindrv(rand_speed, rand_spin, htim1);
+			HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+			HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
 
 			last_rand_tick = HAL_GetTick();
 		}
@@ -161,7 +164,8 @@ int pgm_auto(void){
 		seg7_display(text_auto, ANGLE_ADDR);
 	}
 
-	if((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000){
+	if(((HAL_GetTick() - last_rand_tick) > AUTO_DELAY * 1000) |
+			pgmChanged){
 
 		uint16_t rand_speed = (rand() % (101 - AUTO_SPEED_MIN)) + AUTO_SPEED_MIN;
 		int16_t rand_spin = (rand() % 101) -50;
